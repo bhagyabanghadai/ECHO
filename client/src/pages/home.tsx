@@ -111,6 +111,18 @@ export default function Home() {
 
         <div className="text-center z-10 px-4">
           <HeroGlobe />
+
+          {/* Globe Instructions */}
+          <motion.div
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2 }}
+          >
+            <p className="text-gray-400 text-sm">
+              ✨ Hover over memory pulses to see details • Click the globe to make it spin • Move your mouse to rotate
+            </p>
+          </motion.div>
           
           <motion.h1 
             className="text-5xl md:text-7xl font-light mb-6 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent"

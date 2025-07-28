@@ -171,6 +171,26 @@
     transform-style: preserve-3d;
     perspective: 1000px;
   }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  /* Updated custom cursor for better performance */
+  .custom-cursor {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(45deg, #a855f7, #ec4899);
+    border-radius: 50%;
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+  }
+
+  .custom-cursor.hover {
+    transform: scale(1.5) !important;
+    background: linear-gradient(45deg, #ec4899, #f59e0b);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+  }
 }
 
 @layer utilities {

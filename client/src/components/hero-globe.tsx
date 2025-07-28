@@ -17,6 +17,8 @@ export default function HeroGlobe() {
   const [isHovered, setIsHovered] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState<MemoryPulse | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const [isSpinning, setIsSpinning] = useState(false);
 
   const memoryPulses: MemoryPulse[] = [
     { id: "1", x: 25, y: 30, emotion: "love", delay: 0, location: "Paris, France", content: "Warmth of love near the Eiffel Tower..." },
@@ -36,48 +38,118 @@ export default function HeroGlobe() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (globeRef.current) {
+      if (globeRef.current && !isSpinning) {
         const rect = globeRef.current.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
         
-        setMousePosition({
-          x: (e.clientX - centerX) / 10,
-          y: (e.clientY - centerY) / 10,
-        });
+        const newX = (e.clientX - centerX) / 8;
+        const newY = (e.clientY - centerY) / 8;
+        
+        setMousePosition({ x: newX, y: newY });
+        setRotation({ x: newY * 0.5, y: newX * 0.5 });
       }
     };
 
+    // Auto-spin when not hovering
+    let spinInterval: NodeJS.Timeout;
+    if (!isHovered && !isSpinning) {
+      spinInterval = setInterval(() => {
+        setRotation(prev => ({ 
+          x: prev.x + 0.5, 
+          y: prev.y + 0.3 
+        }));
+      }, 50);
+    }
+
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (spinInterval) clearInterval(spinInterval);
+    };
+  }, [isHovered, isSpinning]);
 
   return (
     <motion.div 
       ref={globeRef}
-      className="relative mx-auto mb-12 w-80 h-80 md:w-96 md:h-96"
+      className="relative mx-auto mb-12 w-80 h-80 md:w-96 md:h-96 perspective-1000"
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      onClick={() => {
+        setIsSpinning(!isSpinning);
+        if (!isSpinning) {
+          // Trigger a random spin animation
+          setRotation({ 
+            x: Math.random() * 360, 
+            y: Math.random() * 360 
+          });
+        }
+      }}
     >
       <motion.div
-        className="w-full h-full emotion-orb animate-float memory-pulse cursor-pointer bg-gradient-to-br from-purple-600 to-purple-400"
+        className="w-full h-full emotion-orb animate-float memory-pulse cursor-pointer bg-gradient-to-br from-purple-600 via-pink-500 to-purple-400 relative overflow-hidden"
         style={{
-          transform: `rotateY(${mousePosition.x}deg) rotateX(${-mousePosition.y}deg)`,
+          transform: `rotateY(${rotation.y}deg) rotateX(${rotation.x}deg)`,
+          transformStyle: 'preserve-3d',
         }}
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 100 }}
+        whileHover={{ 
+          scale: 1.05,
+          boxShadow: "0 0 40px rgba(168, 85, 247, 0.4)"
+        }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 100,
+          transform: { duration: isSpinning ? 2 : 0.3 }
+        }}
       >
+        {/* Globe grid lines for more realistic feel */}
+        <div className="absolute inset-0 opacity-20">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={`meridian-${i}`}
+              className="absolute bg-white/30"
+              style={{
+                left: `${(i * 12.5)}%`,
+                top: 0,
+                width: '1px',
+                height: '100%',
+                transform: `rotateY(${i * 22.5}deg)`,
+                transformOrigin: 'center',
+              }}
+            />
+          ))}
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={`parallel-${i}`}
+              className="absolute bg-white/30 rounded-full border border-white/20"
+              style={{
+                left: '10%',
+                right: '10%',
+                top: `${10 + i * 15}%`,
+                height: '1px',
+              }}
+            />
+          ))}
+        </div>
         {/* Memory pulses on globe */}
         {memoryPulses.map((pulse) => (
           <motion.div
             key={pulse.id}
-            className={`absolute w-4 h-4 ${emotionColors[pulse.emotion as keyof typeof emotionColors]} rounded-full animate-pulse-slow cursor-pointer`}
+            className={`absolute w-4 h-4 ${emotionColors[pulse.emotion as keyof typeof emotionColors]} rounded-full animate-pulse-slow cursor-pointer shadow-lg border-2 border-white/50`}
             style={{
               top: `${pulse.y}%`,
               left: `${pulse.x}%`,
               animationDelay: `${pulse.delay}s`,
+              transform: `translateZ(20px)`,
+              zIndex: 10,
             }}
-            whileHover={{ scale: 1.5 }}
+            whileHover={{ 
+              scale: 1.8,
+              boxShadow: "0 0 20px currentColor",
+              z: 20
+            }}
+            whileTap={{ scale: 1.2 }}
             onMouseEnter={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               setTooltipPosition({ 
@@ -89,32 +161,38 @@ export default function HeroGlobe() {
             onMouseLeave={() => {
               setSelectedMemory(null);
             }}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               console.log(`Clicked ${pulse.emotion} memory in ${pulse.location}`);
+              // Add a ripple effect
+              const ripple = document.createElement('div');
+              ripple.className = 'absolute inset-0 rounded-full bg-white/50 animate-ping';
+              e.currentTarget.appendChild(ripple);
+              setTimeout(() => ripple.remove(), 1000);
             }}
+            data-hover-element
           >
+            {/* Pulse ring effect */}
             <motion.div
-              className="absolute inset-0 rounded-full"
+              className="absolute inset-0 rounded-full border-2 border-current opacity-50"
               animate={{
                 scale: [1, 2, 1],
-                opacity: [0.8, 0, 0.8],
+                opacity: [0.5, 0, 0.5],
               }}
               transition={{
                 duration: 2,
                 repeat: Infinity,
                 delay: pulse.delay,
               }}
-              style={{
-                background: `radial-gradient(circle, ${
-                  pulse.emotion === 'love' ? '#f472b6' :
-                  pulse.emotion === 'peace' ? '#22d3ee' :
-                  pulse.emotion === 'nostalgia' ? '#a855f7' :
-                  pulse.emotion === 'joy' ? '#facc15' : '#fb923c'
-                } 0%, transparent 70%)`,
-              }}
             />
           </motion.div>
         ))}
+
+        {/* Additional atmospheric elements */}
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-transparent rounded-full" />
+        <div className="absolute top-4 right-8 w-2 h-2 bg-white/80 rounded-full animate-pulse" />
+        <div className="absolute bottom-12 left-6 w-1 h-1 bg-cyan-300 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/3 left-4 w-1 h-1 bg-pink-300 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
 
         {/* Globe shine effect */}
         <motion.div
