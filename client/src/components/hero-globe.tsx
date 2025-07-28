@@ -7,19 +7,23 @@ interface MemoryPulse {
   y: number;
   emotion: string;
   delay: number;
+  location: string;
+  content: string;
 }
 
 export default function HeroGlobe() {
   const globeRef = useRef<HTMLDivElement>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [selectedMemory, setSelectedMemory] = useState<MemoryPulse | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   const memoryPulses: MemoryPulse[] = [
-    { id: "1", x: 25, y: 30, emotion: "love", delay: 0 },
-    { id: "2", x: 70, y: 60, emotion: "peace", delay: 1 },
-    { id: "3", x: 45, y: 25, emotion: "nostalgia", delay: 2 },
-    { id: "4", x: 80, y: 40, emotion: "joy", delay: 0.5 },
-    { id: "5", x: 30, y: 70, emotion: "warmth", delay: 1.5 },
+    { id: "1", x: 25, y: 30, emotion: "love", delay: 0, location: "Paris, France", content: "Warmth of love near the Eiffel Tower..." },
+    { id: "2", x: 70, y: 60, emotion: "peace", delay: 1, location: "London, UK", content: "Found peace by the Thames today..." },
+    { id: "3", x: 45, y: 25, emotion: "nostalgia", delay: 2, location: "Shibuya, Tokyo", content: "Missing the cherry blossoms..." },
+    { id: "4", x: 80, y: 40, emotion: "joy", delay: 0.5, location: "Sydney, Australia", content: "Pure joy watching the sunrise..." },
+    { id: "5", x: 30, y: 70, emotion: "warmth", delay: 1.5, location: "Central Park, NYC", content: "Love overflowing in the heart of the city..." },
   ];
 
   const emotionColors = {
@@ -74,9 +78,19 @@ export default function HeroGlobe() {
               animationDelay: `${pulse.delay}s`,
             }}
             whileHover={{ scale: 1.5 }}
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setTooltipPosition({ 
+                x: rect.left + rect.width / 2, 
+                y: rect.top - 10 
+              });
+              setSelectedMemory(pulse);
+            }}
+            onMouseLeave={() => {
+              setSelectedMemory(null);
+            }}
             onClick={() => {
-              // Trigger whisper sound effect here
-              console.log(`Clicked ${pulse.emotion} memory`);
+              console.log(`Clicked ${pulse.emotion} memory in ${pulse.location}`);
             }}
           >
             <motion.div
@@ -115,15 +129,46 @@ export default function HeroGlobe() {
           }}
         />
 
-        {/* Hover tooltip */}
-        {isHovered && (
+        {/* Memory tooltip */}
+        {selectedMemory && (
+          <motion.div
+            className="fixed glass-morphism rounded-xl p-4 pointer-events-none z-50 max-w-xs transform -translate-x-1/2"
+            style={{
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+            }}
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+          >
+            <div className="text-sm">
+              <p className="text-gray-400 mb-1">Memory from</p>
+              <p className="text-white font-medium">{selectedMemory.location}</p>
+              <p className={`text-${
+                selectedMemory.emotion === 'love' ? 'pink' :
+                selectedMemory.emotion === 'peace' ? 'cyan' :
+                selectedMemory.emotion === 'nostalgia' ? 'purple' :
+                selectedMemory.emotion === 'joy' ? 'yellow' : 'orange'
+              }-400 text-xs mb-2`}>
+                {selectedMemory.emotion === 'love' ? '❤️' :
+                 selectedMemory.emotion === 'peace' ? '😌' :
+                 selectedMemory.emotion === 'nostalgia' ? '💜' :
+                 selectedMemory.emotion === 'joy' ? '✨' : '💕'} {selectedMemory.emotion}
+              </p>
+              <p className="text-gray-300 text-xs italic">"{selectedMemory.content}"</p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* General hover tooltip */}
+        {isHovered && !selectedMemory && (
           <motion.div
             className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur px-4 py-2 rounded-lg text-sm text-white pointer-events-none"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
           >
-            Click to hear a whispered memory...
+            Click memory pulses to hear whispered emotions...
           </motion.div>
         )}
       </motion.div>

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ChevronDown, Heart, MapPin, Brain, Shield, Link2, Archive, Mic2, Users, Globe } from "lucide-react";
+import { Link } from "wouter";
 
 const emotionColors = {
   nostalgia: "from-purple-600 to-purple-400",
@@ -146,6 +147,12 @@ export default function Home() {
               variant="outline" 
               size="lg"
               className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-4 text-lg font-medium"
+              onClick={() => {
+                const waitlistSection = document.getElementById('waitlist');
+                if (waitlistSection) {
+                  waitlistSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
             >
               🕊️ Join the Waitlist
             </Button>
@@ -352,7 +359,7 @@ export default function Home() {
             </p>
           </div>
 
-          <EmotionMap data={emotionMapData?.data || []} />
+          <EmotionMap data={(emotionMapData as any)?.data || []} />
         </div>
       </motion.section>
 
@@ -421,6 +428,7 @@ export default function Home() {
 
       {/* Call to Action */}
       <motion.section 
+        id="waitlist"
         className="py-20 relative"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -479,7 +487,7 @@ export default function Home() {
                 </div>
 
                 <div className="text-sm text-gray-500">
-                  <p>🔒 Private beta • 🎯 {waitlistData?.count || 0} people waiting • ✨ Early access perks</p>
+                  <p>🔒 Private beta • 🎯 {(waitlistData as any)?.count || 0} people waiting • ✨ Early access perks</p>
                 </div>
               </div>
             </div>
@@ -500,14 +508,19 @@ export default function Home() {
 
             <div className="flex flex-col md:flex-row items-center gap-8">
               <nav className="flex gap-6">
-                {["Privacy", "Terms", "Support", "Contact"].map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    className="text-gray-400 hover:text-purple-400 transition-colors text-sm"
+                {[
+                  { name: "Privacy", path: "/privacy" },
+                  { name: "Terms", path: "/terms" },
+                  { name: "Support", path: "/support" },
+                  { name: "Contact", path: "/contact" }
+                ].map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.path}
+                    className="text-gray-400 hover:text-purple-400 transition-colors text-sm cursor-pointer"
                   >
-                    {link}
-                  </a>
+                    {link.name}
+                  </Link>
                 ))}
               </nav>
 

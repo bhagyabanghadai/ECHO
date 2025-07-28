@@ -149,6 +149,8 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      avatar: insertUser.avatar || null,
+      bio: insertUser.bio || null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -180,6 +182,9 @@ export class MemStorage implements IStorage {
     const memory: Memory = {
       ...memoryData,
       id,
+      audioUrl: memoryData.audioUrl || null,
+      emotionConfidence: memoryData.emotionConfidence || 0,
+      locationName: memoryData.locationName || null,
       isActive: 1,
       unlockCount: 0,
       createdAt: new Date(),
@@ -199,7 +204,7 @@ export class MemStorage implements IStorage {
   async incrementMemoryUnlocks(id: string): Promise<void> {
     const memory = this.memories.get(id);
     if (memory) {
-      memory.unlockCount += 1;
+      memory.unlockCount = (memory.unlockCount || 0) + 1;
       this.memories.set(id, memory);
     }
   }
@@ -213,6 +218,8 @@ export class MemStorage implements IStorage {
     const unlock: MemoryUnlock = {
       ...unlockData,
       id,
+      echoContent: unlockData.echoContent || null,
+      echoAudioUrl: unlockData.echoAudioUrl || null,
       unlockedAt: new Date(),
     };
     this.memoryUnlocks.set(id, unlock);
@@ -229,6 +236,7 @@ export class MemStorage implements IStorage {
     const user: WaitlistUser = {
       ...userData,
       id,
+      source: userData.source || null,
       joinedAt: new Date(),
     };
     this.waitlistUsers.set(user.email, user);

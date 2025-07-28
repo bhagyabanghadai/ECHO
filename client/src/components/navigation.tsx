@@ -55,7 +55,15 @@ export default function Navigation() {
           </div>
 
           {/* CTA Button */}
-          <Button className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-6 py-2 rounded-full">
+          <Button 
+            className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-6 py-2 rounded-full"
+            onClick={() => {
+              const waitlistSection = document.getElementById('waitlist');
+              if (waitlistSection) {
+                waitlistSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
             Join Waitlist
           </Button>
         </div>
@@ -79,7 +87,16 @@ export default function Navigation() {
                   {item.label}
                 </a>
               ))}
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-6 py-2 rounded-full">
+              <Button 
+                className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-6 py-2 rounded-full"
+                onClick={() => {
+                  const waitlistSection = document.getElementById('waitlist');
+                  if (waitlistSection) {
+                    waitlistSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                  setIsOpen(false);
+                }}
+              >
                 Join Waitlist
               </Button>
             </div>
