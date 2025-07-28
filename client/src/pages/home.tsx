@@ -6,12 +6,12 @@ import EmotionMap from "@/components/emotion-map";
 import VoiceRecorder from "@/components/voice-recorder";
 import MemoryCard from "@/components/memory-card";
 import FeatureShowcase from "@/components/feature-showcase";
+import { AuthForms } from "@/components/auth-forms";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ChevronDown, Heart, MapPin, Brain, Shield, Link2, Archive, Mic2, Users, Globe } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth, useLogout } from "@/hooks/useAuth";
+import { ChevronDown, Heart, MapPin, Brain, Shield, Link2, Archive, Mic2, Users, Globe, LogOut, User } from "lucide-react";
 import { Link } from "wouter";
 
 const emotionColors = {
@@ -32,47 +32,27 @@ export default function Home() {
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  const [email, setEmail] = useState("");
+  const [showAuth, setShowAuth] = useState(false);
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const logoutMutation = useLogout();
   const { toast } = useToast();
-
-  // Fetch waitlist count
-  const { data: waitlistData } = useQuery({
-    queryKey: ["/api/waitlist/count"],
-  });
 
   // Fetch global emotion map data
   const { data: emotionMapData } = useQuery({
     queryKey: ["/api/emotions/map"],
   });
 
-  // Waitlist signup mutation
-  const waitlistMutation = useMutation({
-    mutationFn: async (email: string) => {
-      return apiRequest("POST", "/api/waitlist", { email, source: "landing_page" });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Welcome to ECHO! 🎉",
-        description: "You've been added to our waitlist. We'll notify you when we launch.",
-      });
-      setEmail("");
-      queryClient.invalidateQueries({ queryKey: ["/api/waitlist/count"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Oops!",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleWaitlistSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      waitlistMutation.mutate(email.trim());
-    }
+  const handleAuthSuccess = () => {
+    setShowAuth(false);
   };
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
+  if (showAuth) {
+    return <AuthForms onSuccess={handleAuthSuccess} />;
+  }
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-white overflow-x-hidden">
@@ -149,25 +129,48 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.9 }}
           >
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-8 py-4 text-lg font-medium animate-glow"
-            >
-              🎧 Start Echoing
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-4 text-lg font-medium"
-              onClick={() => {
-                const waitlistSection = document.getElementById('waitlist');
-                if (waitlistSection) {
-                  waitlistSection.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-            >
-              🕊️ Join the Waitlist
-            </Button>
+{isAuthenticated ? (
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                <div className="text-center sm:text-left">
+                  <p className="text-purple-400 mb-2">Welcome back, {user?.username}!</p>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-8 py-4 text-lg font-medium animate-glow"
+                  >
+                    🎧 Start Echoing
+                  </Button>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-gray-400 text-gray-400 hover:bg-gray-400 hover:text-white px-6 py-2"
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-8 py-4 text-lg font-medium animate-glow"
+                  onClick={() => setShowAuth(true)}
+                >
+                  🎧 Start Echoing
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-4 text-lg font-medium"
+                  onClick={() => setShowAuth(true)}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Join ECHO
+                </Button>
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -440,7 +443,7 @@ export default function Home() {
 
       {/* Call to Action */}
       <motion.section 
-        id="waitlist"
+        id="cta"
         className="py-20 relative"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -462,44 +465,46 @@ export default function Home() {
                   Join the ECHO community and discover the magic of shared emotions. Your voice might be exactly what someone needs to hear.
                 </p>
 
-                <form onSubmit={handleWaitlistSubmit} className="max-w-md mx-auto mb-8">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 bg-white/5 border-white/20 rounded-full px-6 py-4 text-white placeholder-gray-400 focus:border-purple-400"
-                      required
-                    />
-                    <Button
-                      type="submit"
-                      disabled={waitlistMutation.isPending}
-                      className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-8 py-4 rounded-full font-medium"
-                    >
-                      {waitlistMutation.isPending ? "Joining..." : "Join Waitlist"}
-                    </Button>
-                  </div>
-                </form>
-
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-                  <Button 
-                    size="lg"
-                    className="bg-gradient-to-r from-pink-500 to-yellow-400 hover:from-pink-600 hover:to-yellow-500 px-8 py-4 text-lg font-medium"
-                  >
-                    🎧 Start Echoing Now
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white px-8 py-4 text-lg font-medium"
-                  >
-                    📱 Download App
-                  </Button>
+                  {isAuthenticated ? (
+                    <>
+                      <Button 
+                        size="lg"
+                        className="bg-gradient-to-r from-pink-500 to-yellow-400 hover:from-pink-600 hover:to-yellow-500 px-8 py-4 text-lg font-medium"
+                      >
+                        🎧 Create Your First Memory
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white px-8 py-4 text-lg font-medium"
+                      >
+                        🗺️ Explore Memory Map
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        size="lg"
+                        className="bg-gradient-to-r from-pink-500 to-yellow-400 hover:from-pink-600 hover:to-yellow-500 px-8 py-4 text-lg font-medium"
+                        onClick={() => setShowAuth(true)}
+                      >
+                        🎧 Start Echoing Now
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white px-8 py-4 text-lg font-medium"
+                        onClick={() => setShowAuth(true)}
+                      >
+                        📝 Create Account
+                      </Button>
+                    </>
+                  )}
                 </div>
 
                 <div className="text-sm text-gray-500">
-                  <p>🔒 Private beta • 🎯 {(waitlistData as any)?.count || 0} people waiting • ✨ Early access perks</p>
+                  <p>🔒 Secure & Private • 🌍 Global Community • ✨ Free to Join</p>
                 </div>
               </div>
             </div>
