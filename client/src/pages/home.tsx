@@ -6,7 +6,7 @@ import EmotionMap from "@/components/emotion-map";
 import VoiceRecorder from "@/components/voice-recorder";
 import MemoryCard from "@/components/memory-card";
 import FeatureShowcase from "@/components/feature-showcase";
-import { AuthForms } from "@/components/auth-forms";
+import { AuthModal } from "@/components/auth-modal";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -32,7 +32,8 @@ export default function Home() {
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  const [showAuth, setShowAuth] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authTab, setAuthTab] = useState<"login" | "signup">("login");
   const { user, isAuthenticated, isLoading } = useAuth();
   const logoutMutation = useLogout();
   const { toast } = useToast();
@@ -42,17 +43,14 @@ export default function Home() {
     queryKey: ["/api/emotions/map"],
   });
 
-  const handleAuthSuccess = () => {
-    setShowAuth(false);
-  };
-
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
-  if (showAuth) {
-    return <AuthForms onSuccess={handleAuthSuccess} />;
-  }
+  const openAuthModal = (tab: "login" | "signup" = "login") => {
+    setAuthTab(tab);
+    setShowAuthModal(true);
+  };
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-white overflow-x-hidden">
@@ -156,7 +154,7 @@ export default function Home() {
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-8 py-4 text-lg font-medium animate-glow"
-                  onClick={() => setShowAuth(true)}
+                  onClick={() => openAuthModal("login")}
                 >
                   🎧 Start Echoing
                 </Button>
@@ -164,7 +162,7 @@ export default function Home() {
                   variant="outline" 
                   size="lg"
                   className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-4 text-lg font-medium"
-                  onClick={() => setShowAuth(true)}
+                  onClick={() => openAuthModal("signup")}
                 >
                   <User className="w-4 h-4 mr-2" />
                   Join ECHO
@@ -487,7 +485,7 @@ export default function Home() {
                       <Button 
                         size="lg"
                         className="bg-gradient-to-r from-pink-500 to-yellow-400 hover:from-pink-600 hover:to-yellow-500 px-8 py-4 text-lg font-medium"
-                        onClick={() => setShowAuth(true)}
+                        onClick={() => openAuthModal("login")}
                       >
                         🎧 Start Echoing Now
                       </Button>
@@ -495,7 +493,7 @@ export default function Home() {
                         variant="outline" 
                         size="lg"
                         className="border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-white px-8 py-4 text-lg font-medium"
-                        onClick={() => setShowAuth(true)}
+                        onClick={() => openAuthModal("signup")}
                       >
                         📝 Create Account
                       </Button>
@@ -565,6 +563,13 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Authentication Modal */}
+      <AuthModal 
+        open={showAuthModal} 
+        onOpenChange={setShowAuthModal}
+        defaultTab={authTab}
+      />
     </div>
   );
 }
