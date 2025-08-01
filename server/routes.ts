@@ -260,11 +260,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Latitude and longitude required" });
       }
 
-      const memories = await storage.getNearbyMemories(
+      const memories = await storage.getMemoriesNearLocation(
         parseFloat(lat as string),
         parseFloat(lng as string),
-        parseInt(radius as string),
-        sessionData.userId
+        parseInt(radius as string)
       );
       
       res.json({ data: memories });

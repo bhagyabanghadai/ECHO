@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth, useLogout } from "@/hooks/useAuth";
 import { ChevronDown, Heart, MapPin, Brain, Shield, Link2, Archive, Mic2, Users, Globe, LogOut, User } from "lucide-react";
 import { Link } from "wouter";
+import { VoiceMemoryRecorder } from "@/components/voice-memory-recorder";
 
 const emotionColors = {
   nostalgia: "from-purple-600 to-purple-400",
@@ -35,6 +36,7 @@ export default function Home() {
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "signup">("login");
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const { user, isAuthenticated, isLoading } = useAuth();
   const logoutMutation = useLogout();
   const { toast } = useToast();
@@ -145,9 +147,11 @@ export default function Home() {
                   <p className="text-purple-400 mb-2">Welcome back, {user?.username}!</p>
                   <Button 
                     size="lg" 
+                    onClick={() => setShowVoiceRecorder(true)}
                     className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 px-8 py-4 text-lg font-medium animate-glow"
                   >
-                    🎧 Start Echoing
+                    <Mic2 className="w-5 h-5 mr-2" />
+                    Create Voice Memory
                   </Button>
                 </div>
                 <Button 
@@ -384,7 +388,7 @@ export default function Home() {
             </p>
           </div>
 
-          <EmotionMap data={(emotionMapData as any)?.data || []} />
+          <EmotionMap />
         </div>
       </motion.section>
 
@@ -581,6 +585,12 @@ export default function Home() {
         open={showAuthModal} 
         onOpenChange={setShowAuthModal}
         defaultTab={authTab}
+      />
+
+      {/* Voice Memory Recorder */}
+      <VoiceMemoryRecorder 
+        isOpen={showVoiceRecorder}
+        onClose={() => setShowVoiceRecorder(false)}
       />
     </div>
   );

@@ -17,13 +17,17 @@ export const users = pgTable("users", {
 export const memories = pgTable("memories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  content: text("content").notNull(), // Voice transcript or text content
+  title: text("title").notNull(), // Memory title
+  description: text("description"), // Optional description
+  content: text("content"), // Voice transcript or text content
+  audioData: text("audio_data"), // Base64 encoded audio data
   audioUrl: text("audio_url"), // URL to audio file
   emotion: text("emotion").notNull(), // AI-detected emotion
   emotionConfidence: real("emotion_confidence").default(0),
   latitude: real("latitude").notNull(),
   longitude: real("longitude").notNull(),
   locationName: text("location_name"),
+  duration: integer("duration").default(0), // Audio duration in seconds
   accessType: text("access_type").notNull().default("public"), // public, friends, emotion_match, private
   isActive: integer("is_active").default(1), // 1 = sleeping, 2 = unlocked
   unlockCount: integer("unlock_count").default(0),
@@ -63,14 +67,19 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertMemorySchema = createInsertSchema(memories).pick({
+  title: true,
+  description: true,
   content: true,
+  audioData: true,
   audioUrl: true,
   emotion: true,
   emotionConfidence: true,
   latitude: true,
   longitude: true,
   locationName: true,
+  duration: true,
   accessType: true,
+  isActive: true,
 });
 
 export const insertMemoryUnlockSchema = createInsertSchema(memoryUnlocks).pick({
