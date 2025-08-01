@@ -155,8 +155,12 @@ export function GoogleMapsEmotionMap() {
       // Skip if filtering by specific emotion
       if (selectedEmotion && emotion.emotion !== selectedEmotion) return;
 
+      // Ensure we have valid coordinates
+      const lat = typeof emotion.lat === 'number' ? emotion.lat : parseFloat(emotion.lat) || 0;
+      const lng = typeof emotion.lng === 'number' ? emotion.lng : parseFloat(emotion.lng) || 0;
+      
       const marker = new window.google.maps.Marker({
-        position: { lat: emotion.lat, lng: emotion.lng },
+        position: { lat, lng },
         map: map,
         title: `${emotion.emotion}: ${emotion.count} memories`,
         icon: {
