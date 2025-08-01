@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   avatar: text("avatar"),
   bio: text("bio"),
+  hasCompletedOnboarding: integer("has_completed_onboarding").default(0), // 0 = false, 1 = true
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

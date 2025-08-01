@@ -4,6 +4,25 @@
 
 ECHO is a modern web application that serves as an AI-powered emotional memory social network. The application allows users to create voice-based memories tied to specific locations and emotions, which can then be discovered and "echoed" by other users. Built with a modern tech stack, ECHO combines React frontend, Express.js backend, and PostgreSQL database with Drizzle ORM.
 
+## MVP Features Implemented
+
+The core MVP focuses on 3 high-impact features that create magical first-minute experiences:
+
+1. **✅ GPS-Based Unlock**: Users can discover emotional memories hidden in their physical location. The app uses geolocation to surface memories within a specific radius, creating location-aware storytelling.
+
+2. **✅ Real-Time Voice Posting**: Users can record voice memories that are instantly analyzed for emotional content. The app simulates AI emotion detection (joy, nostalgia, calm, etc.) and immediately processes recordings into shareable memories.
+
+3. **✅ Emotion-Aware Welcome**: New users experience a guided demo that showcases all three features in an interactive flow. The system demonstrates location discovery, voice recording with emotion analysis, and memory unlocking in a cohesive onboarding experience.
+
+## Recent Changes (August 1, 2025)
+
+- Implemented authentication modal windows with tabbed login/signup interface
+- Created MVP demo component showcasing the 3 core features
+- Added GPS-based memory discovery with distance calculations  
+- Built real-time voice recording simulation with emotion detection
+- Integrated location-aware memory unlocking system
+- Added database schema support for memories, unlocks, and geolocation data
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

@@ -7,6 +7,7 @@ import VoiceRecorder from "@/components/voice-recorder";
 import MemoryCard from "@/components/memory-card";
 import FeatureShowcase from "@/components/feature-showcase";
 import { AuthModal } from "@/components/auth-modal";
+import { MVPDemo } from "@/components/mvp-demo";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -51,6 +52,17 @@ export default function Home() {
     setAuthTab(tab);
     setShowAuthModal(true);
   };
+
+  const handleOnboardingComplete = () => {
+    // Mark user as having completed onboarding
+    // This would typically update the user's onboarding status in the backend
+    window.location.reload(); // Refresh to show the full app
+  };
+
+  // Show MVP demo for new authenticated users
+  if (isAuthenticated && user && !user.hasCompletedOnboarding) {
+    return <MVPDemo onComplete={handleOnboardingComplete} />;
+  }
 
   return (
     <div ref={containerRef} className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-white overflow-x-hidden">

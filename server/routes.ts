@@ -227,6 +227,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Memory management endpoints
+  app.post("/api/memories", async (req, res) => {
+    try {
+      const sessionData = req.session as any;
+      if (!sessionData.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const memoryData = req.body;
+      const result = await storage.createMemory({
+        ...memoryData,
+        userId: sessionData.userId,
+      });
+      
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Error creating memory:", error);
+      res.status(500).json({ message: "Failed to create memory" });
+    }
+  });
+
+  app.get("/api/memories/nearby", async (req, res) => {
+    try {
+      const sessionData = req.session as any;
+      if (!sessionData.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { lat, lng, radius = 5000 } = req.query; // radius in meters
+      if (!lat || !lng) {
+        return res.status(400).json({ message: "Latitude and longitude required" });
+      }
+
+      const memories = await storage.getNearbyMemories(
+        parseFloat(lat as string),
+        parseFloat(lng as string),
+        parseInt(radius as string),
+        sessionData.userId
+      );
+      
+      res.json({ data: memories });
+    } catch (error) {
+      console.error("Error fetching nearby memories:", error);
+      res.status(500).json({ message: "Failed to fetch nearby memories" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
