@@ -1,18 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { User } from "@shared/schema";
 
 export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["/api/auth/me"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
+  // If we get a 401, user is not authenticated
+  const isAuthenticated = !!user && !error;
+  
   return {
     user,
     isLoading,
-    isAuthenticated: !!user && !error,
+    isAuthenticated,
     error
   };
 }

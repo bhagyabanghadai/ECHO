@@ -1,0 +1,161 @@
+Perfect timing 👌 — the **after-login page (dashboard/discovery screen)** is the **heart of ECHO**, where users feel the magic of unlocking memories. If we design this right, it will immediately communicate the purpose of ECHO **without any words** — just through the look, motion, and interactions.
+
+Here’s a full **design plan for the after-login page** with all the features and UI/UX elements it should have.
+
+---
+
+# 🌌 **ECHO After-Login Page (Dashboard / Discovery)**
+
+---
+
+## 🎯 **Core Purpose**
+
+* Show the user a **world of sleeping memories** waiting to be unlocked.
+* Make them curious → entice them to explore and echo.
+* Immediately reinforce:
+  *“This is not Instagram. This is not Snapchat. This is your emotional map.”*
+
+---
+
+## 🖼️ **Layout Concept**
+
+### **Hero Section: Interactive Emotion Map**
+
+* Full-screen **3D map or globe** (built with Three.js / Mapbox).
+* Pulsing orbs = **sleeping memories**.
+* Colors of the orbs represent emotions:
+
+  * 💕 Love → glowing pink
+  * 😌 Peace → teal soft glow
+  * 😢 Nostalgia → purple/blue haze
+  * 😊 Joy → gold/orange flicker
+* Orbs have subtle ripple animations — like heartbeats.
+
+**User Interaction:**
+
+* Drag/scroll = pan & zoom map
+* Hover/tap orb = orb brightens, soft whisper or short text teaser shows
+* Click orb → open **Memory Unlock Modal**
+
+---
+
+## 🔎 **Top Section (Navigation Bar)**
+
+* **Logo (ECHO)** on the left
+* Icons on the right:
+
+  * 🔔 Notifications
+  * 👤 Profile avatar
+  * ➕ Create Memory button (floating purple-glow action button)
+
+---
+
+## 📍 **Memory Unlock Card (Floating on Map)**
+
+When the user hovers or taps an orb:
+
+* Card slides up from bottom with:
+
+  * Profile photo or **Anonymous Memory**
+  * Distance/time since posted (*“15m away — 2 days ago”*)
+  * Emotion tags (e.g., 💙 Nostalgia, 🌿 Peace)
+  * Button: **Unlock Memory** (glowing lock icon)
+  * Small text preview: *“Someone left an emotional memory here…”*
+
+---
+
+## 🗂️ **Main Sections Below Map**
+
+Scroll down → reveal 3 main panels (parallax scroll):
+
+### **1. Your Vault (Quick Glimpse)**
+
+* Shows 3 recent unlocked memories (audio/image previews).
+* Button: “Go to Vault”
+
+---
+
+### **2. Echo Suggestions (AI-Powered)**
+
+* Section labeled: *“Based on your feelings”*
+* Cards suggested by AI Emotion Match
+* Example: *“You shared ‘loneliness.’ Here’s a memory from someone else who felt the same.”*
+
+---
+
+### **3. Echo Chains**
+
+* Preview of ongoing chains (memories with replies).
+* Shows threads of 2–3 cards each:
+
+  * Card 1: Original post
+  * Card 2: Someone echoed back
+  * Button: “Join the Echo”
+
+---
+
+## 🧭 **Floating Action Buttons**
+
+* ➕ **Create Memory** (center bottom, glowing purple)
+* 📍 **Nearby** (mini-button bottom-left: shows nearest sleeping memory)
+* 🧠 **Emotion Filter** (mini-button bottom-right: filter map by emotion color)
+
+---
+
+## 🎨 **Design Style**
+
+* **Dark Dreamlike Base:** #0D0D0D background
+* **Glowing Emotion Colors:**
+
+  * Joy → Amber/Gold
+  * Love → Pink/Rose
+  * Nostalgia → Indigo/Purple
+  * Peace → Teal/Seafoam
+* **Fonts:** Clean sans-serif (Inter/DM Sans), soft rounded edges
+* **Animations:**
+
+  * Orbs pulse like heartbeats
+  * Unlock modal fades in with ripple effect
+  * Subtle background gradient shifts with user’s emotional state
+
+---
+
+## 🔔 **Key Features (MVP)**
+
+| Feature              | Interaction                               |
+| -------------------- | ----------------------------------------- |
+| 3D Map               | Shows sleeping memories                   |
+| Memory Unlock Modal  | Unlocks based on proximity/emotion/friend |
+| Vault Preview        | Recently unlocked memories                |
+| Echo Suggestions     | AI-suggested resonant memories            |
+| Echo Chains          | See conversations built on echoes         |
+| Create Memory Button | Record/post instantly                     |
+| Notifications        | Echo unlock alerts, friend requests       |
+| Emotion Filter       | Explore only certain emotions             |
+
+---
+
+## 🧪 **Example User Journey**
+
+1. User logs in → sees 3D glowing map with pulses.
+2. A memory card appears: *“15m away — tagged with Peace.”*
+3. User taps → unlocks voice note: *“I sat here watching the sunset, felt the world was calm again.”*
+4. Unlock modal → *“Echo Back”* button.
+5. User records a short response → both added to Vault.
+6. Vault preview updates instantly → reinforcing connection.
+
+---
+
+## 📌 Bonus Ideas (for later)
+
+* **Dynamic Weather Tie-in:** If it’s raining outside, show raindrop animation over map.
+* **Mood-Adaptive Background:** The app’s background shifts color based on most recent unlocked emotion.
+* **Anonymous Global Echo Globe:** Option to view all echoes worldwide (zoomable earth view).
+
+---
+
+⚡ With this design, your **after-login page** becomes more than a dashboard — it’s a **living emotional landscape**.
+
+---
+
+Would you like me to now **create a Figma-style wireframe prompt** for this, so you can feed it into an AI design tool (like Galileo AI, Uizard, or Figma AI) and actually generate a mockup?
