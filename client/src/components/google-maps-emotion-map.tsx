@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, Map, Layers, Filter, MapPin, Zap, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Globe, Map, Layers, Filter, MapPin, Zap, RotateCcw, Search, Maximize, Minimize, Navigation, Crosshair } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGeolocation } from "@/hooks/use-geolocation";
 
 interface EmotionData {
   emotion: string;
@@ -38,13 +40,20 @@ const emotionColors = {
 
 export function GoogleMapsEmotionMap() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [map, setMap] = useState<any>(null);
+  const [searchBox, setSearchBox] = useState<any>(null);
   const [isGlobeView, setIsGlobeView] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const [showEmotionPanel, setShowEmotionPanel] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(3);
   const [markers, setMarkers] = useState<any[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  
+  const { hasLocation, latitude, longitude } = useGeolocation();
 
   // Fetch emotion map data
   const { data: emotionData, isLoading } = useQuery<{ data: EmotionData[] }>({
@@ -64,14 +73,20 @@ export function GoogleMapsEmotionMap() {
 
         await loader.load();
         
+        // Start with user location if available, otherwise global center
+        const initialCenter = hasLocation && latitude && longitude 
+          ? { lat: latitude, lng: longitude }
+          : { lat: 20, lng: 0 };
+        const initialZoom = hasLocation ? 12 : 2;
+
         const mapInstance = new window.google.maps.Map(mapRef.current, {
-          center: { lat: 20, lng: 0 }, // Global center
-          zoom: 2,
+          center: initialCenter,
+          zoom: initialZoom,
           mapTypeId: window.google.maps.MapTypeId.ROADMAP,
           styles: [
             {
               featureType: "all",
-              elementType: "geometry",
+              elementType: "geometry.fill",
               stylers: [{ color: "#1a1a2e" }]
             },
             {
@@ -85,33 +100,89 @@ export function GoogleMapsEmotionMap() {
               stylers: [{ color: "#0f172a" }]
             },
             {
-              featureType: "administrative",
+              featureType: "administrative.country",
               elementType: "geometry.stroke",
-              stylers: [{ color: "#4a5568" }]
+              stylers: [{ color: "#6366f1", weight: 1 }]
             },
             {
-              featureType: "landscape",
+              featureType: "road",
               elementType: "geometry",
-              stylers: [{ color: "#2d3748" }]
+              stylers: [{ color: "#374151" }]
+            },
+            {
+              featureType: "poi",
+              elementType: "geometry",
+              stylers: [{ color: "#4b5563" }]
             }
           ],
           disableDefaultUI: true,
-          zoomControl: false,
+          zoomControl: true,
+          zoomControlOptions: {
+            position: window.google.maps.ControlPosition.RIGHT_CENTER
+          },
           fullscreenControl: false,
           mapTypeControl: false,
-          streetViewControl: false,
+          streetViewControl: true,
+          streetViewControlOptions: {
+            position: window.google.maps.ControlPosition.RIGHT_TOP
+          },
         });
 
         setMap(mapInstance);
         setMapLoaded(true);
-        setZoomLevel(2);
+        setZoomLevel(initialZoom);
+
+        // Set user location if available
+        if (hasLocation && latitude && longitude) {
+          setUserLocation({ lat: latitude, lng: longitude });
+          
+          // Add user location marker
+          new window.google.maps.Marker({
+            position: { lat: latitude, lng: longitude },
+            map: mapInstance,
+            title: "Your Location",
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: "#3b82f6",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 3,
+            },
+          });
+        }
+
+        // Initialize search functionality
+        if (searchInputRef.current) {
+          const searchBoxInstance = new window.google.maps.places.SearchBox(searchInputRef.current);
+          setSearchBox(searchBoxInstance);
+          
+          mapInstance.addListener("bounds_changed", () => {
+            searchBoxInstance.setBounds(mapInstance.getBounds()!);
+          });
+
+          searchBoxInstance.addListener("places_changed", () => {
+            const places = searchBoxInstance.getPlaces();
+            if (places?.length === 0) return;
+
+            const place = places![0];
+            if (!place.geometry || !place.geometry.location) return;
+
+            // Focus on the searched location
+            mapInstance.setCenter(place.geometry.location);
+            mapInstance.setZoom(15);
+            
+            // Search for memories near this location
+            searchMemoriesNearLocation(place.geometry.location.lat(), place.geometry.location.lng());
+          });
+        }
 
         // Add click listener for interactivity
         mapInstance.addListener("click", (event: any) => {
           if (event.latLng) {
             const lat = event.latLng.lat();
             const lng = event.latLng.lng();
-            console.log(`Clicked at: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+            searchMemoriesNearLocation(lat, lng);
           }
         });
 
@@ -139,7 +210,26 @@ export function GoogleMapsEmotionMap() {
     };
 
     initGoogleMap();
-  }, []);
+  }, [hasLocation, latitude, longitude]);
+
+  // Function to search for memories near a location
+  const searchMemoriesNearLocation = (lat: number, lng: number) => {
+    console.log(`Searching for memories near: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+    // In a real implementation, this would query your backend for nearby memories
+    // For now, we'll highlight existing markers within a certain radius
+    markers.forEach(marker => {
+      const markerPos = marker.getPosition();
+      const distance = window.google.maps.geometry.spherical.computeDistanceBetween(
+        new window.google.maps.LatLng(lat, lng),
+        markerPos
+      );
+      
+      if (distance < 50000) { // 50km radius
+        marker.setAnimation(window.google.maps.Animation.BOUNCE);
+        setTimeout(() => marker.setAnimation(null), 2000);
+      }
+    });
+  };
 
   // Add emotion markers to the map
   useEffect(() => {
@@ -237,6 +327,22 @@ export function GoogleMapsEmotionMap() {
     setZoomLevel(newZoom);
   };
 
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const goToUserLocation = () => {
+    if (map && userLocation) {
+      map.setCenter(userLocation);
+      map.setZoom(15);
+    } else if (map && hasLocation && latitude && longitude) {
+      const location = { lat: latitude, lng: longitude };
+      map.setCenter(location);
+      map.setZoom(15);
+      setUserLocation(location);
+    }
+  };
+
   const focusOnEmotion = (emotion: string) => {
     const newSelectedEmotion = selectedEmotion === emotion ? null : emotion;
     setSelectedEmotion(newSelectedEmotion);
@@ -274,46 +380,67 @@ export function GoogleMapsEmotionMap() {
     .slice(0, 6);
 
   return (
-    <div className="relative w-full h-96 bg-gray-900 rounded-lg overflow-hidden">
+    <div className={`relative bg-gray-900 rounded-lg overflow-hidden transition-all duration-300 ${
+      isFullscreen 
+        ? 'fixed inset-0 z-50 rounded-none' 
+        : 'w-full h-96'
+    }`}>
+      {/* Search Bar */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 w-80">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search for places or memories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white/90 backdrop-blur-sm border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
+      </div>
+
       {/* Interactive Map Container */}
       <div ref={mapRef} className="w-full h-full" />
       
       {/* Control Panel - Top Left */}
-      <div className="absolute top-4 left-4 space-y-2">
+      <div className="absolute top-20 left-4 space-y-2">
         <Button
           onClick={toggleMapType}
           variant="secondary"
           size="sm"
-          className="bg-gray-800/90 backdrop-blur-sm hover:bg-gray-700/90 text-white border-purple-500/30"
+          className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-900 border-gray-300 shadow-lg"
         >
           {isGlobeView ? <Map className="w-4 h-4 mr-2" /> : <Globe className="w-4 h-4 mr-2" />}
-          {isGlobeView ? "Map" : "Globe"}
+          {isGlobeView ? "Map" : "Satellite"}
         </Button>
         
-        <div className="flex gap-1">
-          <Button
-            onClick={() => handleZoom('in')}
-            variant="secondary"
-            size="sm"
-            className="bg-gray-800/90 backdrop-blur-sm hover:bg-gray-700/90 text-white border-purple-500/30 px-2"
-          >
-            +
-          </Button>
-          <Button
-            onClick={() => handleZoom('out')}
-            variant="secondary"
-            size="sm"
-            className="bg-gray-800/90 backdrop-blur-sm hover:bg-gray-700/90 text-white border-purple-500/30 px-2"
-          >
-            -
-          </Button>
-        </div>
+        <Button
+          onClick={goToUserLocation}
+          variant="secondary"
+          size="sm"
+          className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-900 border-gray-300 shadow-lg"
+          disabled={!hasLocation}
+        >
+          <Navigation className="w-4 h-4 mr-2" />
+          My Location
+        </Button>
+        
+        <Button
+          onClick={toggleFullscreen}
+          variant="secondary"
+          size="sm"
+          className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-900 border-gray-300 shadow-lg"
+        >
+          {isFullscreen ? <Minimize className="w-4 h-4 mr-2" /> : <Maximize className="w-4 h-4 mr-2" />}
+          {isFullscreen ? "Exit" : "Fullscreen"}
+        </Button>
         
         <Button
           onClick={() => setShowEmotionPanel(!showEmotionPanel)}
           variant="secondary"
           size="sm"
-          className="bg-gray-800/90 backdrop-blur-sm hover:bg-gray-700/90 text-white border-purple-500/30"
+          className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-900 border-gray-300 shadow-lg"
         >
           <Layers className="w-4 h-4 mr-2" />
           Emotions
@@ -327,11 +454,11 @@ export function GoogleMapsEmotionMap() {
             initial={{ opacity: 0, x: 300 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 300 }}
-            className="absolute top-4 right-4 w-80"
+            className={`absolute top-20 right-4 ${isFullscreen ? 'w-96' : 'w-80'}`}
           >
-            <Card className="bg-gray-800/95 backdrop-blur-sm border-gray-700/50">
+            <Card className="bg-white/95 backdrop-blur-sm border-gray-300 shadow-xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-white flex items-center gap-2">
+                <CardTitle className="text-lg text-gray-900 flex items-center gap-2">
                   <Filter className="w-5 h-5" />
                   Global Emotions Live
                 </CardTitle>
@@ -343,8 +470,8 @@ export function GoogleMapsEmotionMap() {
                       key={emotion}
                       className={`cursor-pointer transition-all capitalize p-3 text-sm rounded-lg border ${
                         selectedEmotion === emotion 
-                          ? "ring-2 ring-purple-400 bg-purple-600/80 text-white border-purple-400" 
-                          : "hover:bg-gray-600/80 bg-gray-700/80 border-gray-600 text-gray-300 hover:border-gray-500"
+                          ? "ring-2 ring-purple-400 bg-purple-100 text-purple-900 border-purple-400" 
+                          : "hover:bg-gray-100 bg-gray-50 border-gray-300 text-gray-700 hover:border-gray-400"
                       }`}
                       onClick={() => focusOnEmotion(emotion)}
                     >
@@ -359,7 +486,7 @@ export function GoogleMapsEmotionMap() {
                           />
                           <span className="font-medium">{emotion}</span>
                         </div>
-                        <span className="text-xs bg-gray-800/60 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-gray-200 px-2 py-1 rounded-full">
                           {count}
                         </span>
                       </div>
@@ -371,15 +498,15 @@ export function GoogleMapsEmotionMap() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg border border-purple-500/30"
+                    className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg border border-purple-300"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Zap className="w-4 h-4 text-purple-400" />
-                      <span className="text-white font-semibold capitalize">
+                      <span className="text-gray-900 font-semibold capitalize">
                         {selectedEmotion} Filter Active
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300 mb-3">
+                    <p className="text-sm text-gray-700 mb-3">
                       Viewing global {selectedEmotion} memories and emotional patterns.
                     </p>
                     <div className="flex gap-2">
@@ -387,7 +514,7 @@ export function GoogleMapsEmotionMap() {
                         onClick={() => setSelectedEmotion(null)}
                         variant="outline"
                         size="sm"
-                        className="flex-1 border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                        className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50"
                       >
                         Clear Filter
                       </Button>
@@ -395,7 +522,7 @@ export function GoogleMapsEmotionMap() {
                         onClick={() => handleZoom('in')}
                         variant="outline"
                         size="sm"
-                        className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                        className="border-purple-300 text-purple-700 hover:bg-purple-50"
                       >
                         <MapPin className="w-4 h-4" />
                       </Button>
@@ -404,17 +531,17 @@ export function GoogleMapsEmotionMap() {
                 )}
                 
                 {/* Real-time Stats */}
-                <div className="border-t border-gray-600 pt-3">
-                  <div className="flex justify-between text-xs text-gray-400 mb-2">
+                <div className="border-t border-gray-300 pt-3">
+                  <div className="flex justify-between text-xs text-gray-600 mb-2">
                     <span>Live Updates</span>
                     <span className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                       Active
                     </span>
                   </div>
-                  <div className="text-sm text-white">
+                  <div className="text-sm text-gray-900">
                     <span className="font-bold">{emotionData?.data?.length || 0}</span> cities
-                    <span className="text-gray-400 ml-2">•</span>
+                    <span className="text-gray-600 ml-2">•</span>
                     <span className="font-bold ml-2">{Object.values(emotionCounts).reduce((a, b) => a + b, 0)}</span> memories
                   </div>
                 </div>
@@ -436,36 +563,47 @@ export function GoogleMapsEmotionMap() {
 
       {/* Map Legend - Bottom Left */}
       <div className="absolute bottom-4 left-4">
-        <Card className="bg-gray-800/90 backdrop-blur-sm border-gray-700/50">
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-300 shadow-lg">
           <CardContent className="p-4">
             <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">Low</span>
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span className="text-gray-700">Low</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">Medium</span>
+                <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                <span className="text-gray-700">Medium</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">High</span>
+                <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
+                <span className="text-gray-700">High</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Zoom Level Indicator - Bottom Right */}
-      <div className="absolute bottom-4 right-4">
-        <Card className="bg-gray-800/90 backdrop-blur-sm border-gray-700/50">
+      {/* Status Indicators - Bottom Right */}
+      <div className="absolute bottom-4 right-4 space-y-2">
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-300 shadow-lg">
           <CardContent className="p-3">
-            <div className="flex items-center gap-2 text-xs text-gray-300">
-              <RotateCcw className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-xs text-gray-700">
+              <Crosshair className="w-3 h-3" />
               <span>Zoom: {zoomLevel}x</span>
             </div>
           </CardContent>
         </Card>
+        
+        {userLocation && (
+          <Card className="bg-white/90 backdrop-blur-sm border-gray-300 shadow-lg">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2 text-xs text-gray-700">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span>Location Active</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
