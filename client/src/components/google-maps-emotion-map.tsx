@@ -329,6 +329,13 @@ export function GoogleMapsEmotionMap() {
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
+    
+    // Trigger a resize event after fullscreen toggle to ensure map redraws correctly
+    setTimeout(() => {
+      if (map && window.google?.maps?.event) {
+        window.google.maps.event.trigger(map, 'resize');
+      }
+    }, 100);
   };
 
   const goToUserLocation = () => {
@@ -382,7 +389,7 @@ export function GoogleMapsEmotionMap() {
   return (
     <div className={`relative bg-gray-900 rounded-lg overflow-hidden transition-all duration-300 ${
       isFullscreen 
-        ? 'fixed inset-0 z-50 rounded-none' 
+        ? 'fixed inset-0 z-50 rounded-none w-screen h-screen' 
         : 'w-full h-96'
     }`}>
       {/* Search Bar */}
@@ -401,7 +408,12 @@ export function GoogleMapsEmotionMap() {
       </div>
 
       {/* Interactive Map Container */}
-      <div ref={mapRef} className="w-full h-full" />
+      <div 
+        ref={mapRef} 
+        className={`w-full transition-all duration-300 ${
+          isFullscreen ? 'h-screen' : 'h-full'
+        }`} 
+      />
       
       {/* Control Panel - Top Left */}
       <div className="absolute top-20 left-4 space-y-2">
