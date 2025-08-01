@@ -113,7 +113,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-black/95 border-white/20 backdrop-blur-sm">
+      <DialogContent className="sm:max-w-md bg-black/95 border-white/20 backdrop-blur-sm animate-in fade-in-0 zoom-in-95 duration-300">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             Welcome to ECHO
@@ -188,6 +188,33 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                     'Sign In'
                   )}
                 </Button>
+                <div className="text-center mt-4">
+                  <button 
+                    type="button"
+                    className="text-sm text-gray-400 hover:text-purple-400 transition-colors"
+                    onClick={() => {
+                      // TODO: Implement forgot password functionality
+                      toast({
+                        title: "Feature Coming Soon",
+                        description: "Password reset functionality will be available soon.",
+                      });
+                    }}
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+                <div className="text-center mt-2">
+                  <p className="text-sm text-gray-400">
+                    Don't have an account?{' '}
+                    <button 
+                      type="button"
+                      className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                      onClick={() => setActiveTab("signup")}
+                    >
+                      Create one here
+                    </button>
+                  </p>
+                </div>
               </form>
             </Form>
           </TabsContent>
@@ -298,10 +325,35 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                     'Create Account'
                   )}
                 </Button>
+                <div className="text-center mt-4">
+                  <p className="text-sm text-gray-400">
+                    Already have an account?{' '}
+                    <button 
+                      type="button"
+                      className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                      onClick={() => setActiveTab("login")}
+                    >
+                      Sign in here
+                    </button>
+                  </p>
+                </div>
               </form>
             </Form>
           </TabsContent>
         </Tabs>
+        
+        <div className="text-center mt-6 pt-4 border-t border-gray-700">
+          <p className="text-xs text-gray-500">
+            By creating an account, you agree to our{' '}
+            <a href="/terms" className="text-purple-400 hover:text-purple-300 transition-colors">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="/privacy" className="text-purple-400 hover:text-purple-300 transition-colors">
+              Privacy Policy
+            </a>
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );
