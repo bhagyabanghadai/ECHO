@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe, Map, Layers, Filter, MapPin, Zap, RotateCcw } from "lucide-react";
@@ -10,6 +11,13 @@ interface EmotionData {
   count: number;
   lat: number;
   lng: number;
+}
+
+// Declare Google Maps types
+declare global {
+  interface Window {
+    google: any;
+  }
 }
 
 const emotionColors = {
@@ -30,11 +38,13 @@ const emotionColors = {
 
 export function GoogleMapsEmotionMap() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<any>(null);
   const [isGlobeView, setIsGlobeView] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const [showEmotionPanel, setShowEmotionPanel] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(3);
+  const [markers, setMarkers] = useState<any[]>([]);
 
   // Fetch emotion map data
   const { data: emotionData, isLoading } = useQuery<{ data: EmotionData[] }>({
@@ -42,198 +52,211 @@ export function GoogleMapsEmotionMap() {
   });
 
   useEffect(() => {
-    const createInteractiveMap = () => {
-      if (mapRef.current) {
+    const initGoogleMap = async () => {
+      if (!mapRef.current) return;
+
+      try {
+        const loader = new Loader({
+          apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY!,
+          version: "weekly",
+          libraries: ["places", "geometry"]
+        });
+
+        await loader.load();
+        
+        const mapInstance = new window.google.maps.Map(mapRef.current, {
+          center: { lat: 20, lng: 0 }, // Global center
+          zoom: 2,
+          mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+          styles: [
+            {
+              featureType: "all",
+              elementType: "geometry",
+              stylers: [{ color: "#1a1a2e" }]
+            },
+            {
+              featureType: "all",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#ffffff" }]
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#0f172a" }]
+            },
+            {
+              featureType: "administrative",
+              elementType: "geometry.stroke",
+              stylers: [{ color: "#4a5568" }]
+            },
+            {
+              featureType: "landscape",
+              elementType: "geometry",
+              stylers: [{ color: "#2d3748" }]
+            }
+          ],
+          disableDefaultUI: true,
+          zoomControl: false,
+          fullscreenControl: false,
+          mapTypeControl: false,
+          streetViewControl: false,
+        });
+
+        setMap(mapInstance);
         setMapLoaded(true);
-        
-        // Create a highly interactive emotion visualization
-        mapRef.current.innerHTML = `
-          <div class="relative w-full h-full bg-gradient-to-br from-gray-900 via-purple-900/30 to-blue-900/30 rounded-lg overflow-hidden">
-            <!-- Globe/Map Background -->
-            <div class="absolute inset-0">
-              <!-- Grid pattern for interactivity -->
-              <div class="absolute inset-0 opacity-10">
-                <div class="grid grid-cols-12 grid-rows-8 h-full w-full">
-                  ${Array.from({length: 96}, (_, i) => 
-                    `<div class="border border-gray-600 hover:bg-purple-400/20 transition-colors cursor-pointer"></div>`
-                  ).join('')}
-                </div>
-              </div>
-              
-              <!-- Continent Outlines -->
-              <svg class="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 1000 500">
-                <!-- North America -->
-                <path d="M150,100 Q200,80 250,120 L280,180 Q260,220 200,200 L120,160 Z" 
-                      stroke="#6366f1" stroke-width="2" fill="none" class="continent-outline"/>
-                <!-- Europe -->
-                <path d="M450,120 Q480,100 520,130 L540,160 Q520,180 480,170 L440,150 Z" 
-                      stroke="#6366f1" stroke-width="2" fill="none" class="continent-outline"/>
-                <!-- Asia -->
-                <path d="M550,100 Q650,80 750,120 L800,200 Q780,240 700,220 L580,180 Z" 
-                      stroke="#6366f1" stroke-width="2" fill="none" class="continent-outline"/>
-                <!-- Africa -->
-                <path d="M420,180 Q450,170 480,190 L500,280 Q480,320 440,300 L400,240 Z" 
-                      stroke="#6366f1" stroke-width="2" fill="none" class="continent-outline"/>
-                <!-- South America -->
-                <path d="M250,240 Q270,230 290,250 L300,350 Q280,380 250,370 L220,320 Z" 
-                      stroke="#6366f1" stroke-width="2" fill="none" class="continent-outline"/>
-                <!-- Australia -->
-                <path d="M700,320 Q730,310 760,330 L780,360 Q760,380 730,375 L700,350 Z" 
-                      stroke="#6366f1" stroke-width="2" fill="none" class="continent-outline"/>
-              </svg>
-            </div>
-            
-            <!-- Interactive Emotion Points -->
-            <div class="absolute inset-0">
-              <!-- Major Cities with Emotions -->
-              <div class="absolute top-1/4 left-1/5 group cursor-pointer">
-                <div class="w-4 h-4 bg-yellow-400 rounded-full animate-pulse shadow-lg shadow-yellow-400/50 hover:scale-150 transition-transform">
-                  <div class="absolute -inset-2 bg-yellow-400/30 rounded-full animate-ping"></div>
-                </div>
-                <div class="hidden group-hover:block absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                  Joy in New York<br><span class="text-yellow-400">234 memories</span>
-                </div>
-              </div>
-              
-              <div class="absolute top-1/3 left-1/2 group cursor-pointer">
-                <div class="w-3 h-3 bg-purple-400 rounded-full animate-pulse shadow-lg shadow-purple-400/50 hover:scale-150 transition-transform">
-                  <div class="absolute -inset-2 bg-purple-400/30 rounded-full animate-ping"></div>
-                </div>
-                <div class="hidden group-hover:block absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                  Nostalgia in Paris<br><span class="text-purple-400">156 memories</span>
-                </div>
-              </div>
-              
-              <div class="absolute top-1/2 right-1/4 group cursor-pointer">
-                <div class="w-5 h-5 bg-pink-400 rounded-full animate-pulse shadow-lg shadow-pink-400/50 hover:scale-150 transition-transform">
-                  <div class="absolute -inset-2 bg-pink-400/30 rounded-full animate-ping"></div>
-                </div>
-                <div class="hidden group-hover:block absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                  Love in Tokyo<br><span class="text-pink-400">387 memories</span>
-                </div>
-              </div>
-              
-              <div class="absolute bottom-1/3 left-1/3 group cursor-pointer">
-                <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50 hover:scale-150 transition-transform">
-                  <div class="absolute -inset-2 bg-green-400/30 rounded-full animate-ping"></div>
-                </div>
-                <div class="hidden group-hover:block absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                  Calm in Sydney<br><span class="text-green-400">92 memories</span>
-                </div>
-              </div>
-              
-              <div class="absolute top-2/3 left-2/5 group cursor-pointer">
-                <div class="w-4 h-4 bg-orange-400 rounded-full animate-pulse shadow-lg shadow-orange-400/50 hover:scale-150 transition-transform">
-                  <div class="absolute -inset-2 bg-orange-400/30 rounded-full animate-ping"></div>
-                </div>
-                <div class="hidden group-hover:block absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/90 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-                  Excitement in Rio<br><span class="text-orange-400">178 memories</span>
-                </div>
-              </div>
-              
-              <!-- Additional smaller emotion points -->
-              <div class="absolute top-1/5 right-1/3 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              <div class="absolute bottom-1/4 right-1/5 w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-              <div class="absolute top-3/4 left-1/6 w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></div>
-              <div class="absolute top-1/6 left-3/5 w-2 h-2 bg-rose-400 rounded-full animate-pulse"></div>
-            </div>
-            
-            <!-- Central Globe Indicator -->
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div class="w-16 h-16 border-2 border-purple-400/30 rounded-full flex items-center justify-center">
-                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full opacity-60 animate-pulse"></div>
+        setZoomLevel(2);
+
+        // Add click listener for interactivity
+        mapInstance.addListener("click", (event: any) => {
+          if (event.latLng) {
+            const lat = event.latLng.lat();
+            const lng = event.latLng.lng();
+            console.log(`Clicked at: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+          }
+        });
+
+        // Listen for zoom changes
+        mapInstance.addListener("zoom_changed", () => {
+          const zoom = mapInstance.getZoom();
+          setZoomLevel(zoom);
+        });
+
+      } catch (error) {
+        console.error("Error loading Google Maps:", error);
+        // Fallback to demo visualization if API fails
+        if (mapRef.current) {
+          mapRef.current.innerHTML = `
+            <div class="flex items-center justify-center h-full bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 rounded-lg">
+              <div class="text-center p-8">
+                <Globe class="w-16 h-16 mx-auto mb-4 text-purple-400" />
+                <h3 class="text-xl font-semibold text-white mb-2">Google Maps Loading...</h3>
+                <p class="text-gray-400">Initializing interactive map</p>
               </div>
             </div>
-            
-            <!-- Interactive Overlay -->
-            <div class="absolute inset-0 bg-black/10 hover:bg-black/5 transition-colors cursor-crosshair"></div>
-          </div>
-        `;
-        
-        // Add click interactions
-        const mapElement = mapRef.current.querySelector('.cursor-crosshair');
-        if (mapElement) {
-          mapElement.addEventListener('click', (e: any) => {
-            const rect = mapElement.getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * 100;
-            const y = ((e.clientY - rect.top) / rect.height) * 100;
-            console.log(`Clicked at: ${x.toFixed(1)}%, ${y.toFixed(1)}%`);
-            
-            // Add temporary emotion point at click location
-            const newPoint = document.createElement('div');
-            newPoint.className = 'absolute w-3 h-3 bg-white rounded-full animate-ping';
-            newPoint.style.left = `${x}%`;
-            newPoint.style.top = `${y}%`;
-            mapElement.appendChild(newPoint);
-            
-            // Remove after animation
-            setTimeout(() => newPoint.remove(), 2000);
-          });
+          `;
         }
       }
     };
 
-    createInteractiveMap();
+    initGoogleMap();
   }, []);
 
+  // Add emotion markers to the map
+  useEffect(() => {
+    if (!map || !emotionData?.data) return;
+
+    // Clear existing markers
+    markers.forEach(marker => marker.setMap(null));
+    setMarkers([]);
+
+    const newMarkers: any[] = [];
+
+    emotionData.data.forEach((emotion) => {
+      // Skip if filtering by specific emotion
+      if (selectedEmotion && emotion.emotion !== selectedEmotion) return;
+
+      const marker = new window.google.maps.Marker({
+        position: { lat: emotion.lat, lng: emotion.lng },
+        map: map,
+        title: `${emotion.emotion}: ${emotion.count} memories`,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: Math.min(Math.max(emotion.count * 8, 12), 30),
+          fillColor: emotionColors[emotion.emotion as keyof typeof emotionColors] || "#888888",
+          fillOpacity: 0.8,
+          strokeColor: "#ffffff",
+          strokeWeight: 2,
+        },
+        animation: window.google.maps.Animation.DROP,
+      });
+
+      // Create info window with custom styling
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="background: #1a202c; color: white; padding: 12px; border-radius: 8px; min-width: 200px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: bold; text-transform: capitalize; color: ${emotionColors[emotion.emotion as keyof typeof emotionColors] || '#ffffff'};">
+              ${emotion.emotion}
+            </h3>
+            <p style="margin: 0 0 8px 0; color: #cbd5e0;">
+              ${emotion.count} emotional ${emotion.count === 1 ? 'memory' : 'memories'}
+            </p>
+            <div style="width: 100%; height: 4px; background: ${emotionColors[emotion.emotion as keyof typeof emotionColors] || '#888888'}; border-radius: 2px; margin-top: 8px;"></div>
+          </div>
+        `
+      });
+
+      marker.addListener("click", () => {
+        infoWindow.open(map, marker);
+      });
+
+      // Add bounce animation on hover
+      marker.addListener("mouseover", () => {
+        marker.setAnimation(window.google.maps.Animation.BOUNCE);
+      });
+
+      marker.addListener("mouseout", () => {
+        marker.setAnimation(null);
+      });
+
+      newMarkers.push(marker);
+    });
+
+    setMarkers(newMarkers);
+  }, [map, emotionData, selectedEmotion]);
+
   const toggleMapType = () => {
+    if (!map) return;
+    
     setIsGlobeView(!isGlobeView);
     
-    if (mapRef.current) {
-      const bgElement = mapRef.current.querySelector('.bg-gradient-to-br');
-      if (bgElement) {
-        if (!isGlobeView) {
-          // Switch to globe view (satellite-like)
-          bgElement.className = bgElement.className.replace(
-            'from-gray-900 via-purple-900/30 to-blue-900/30',
-            'from-blue-900 via-indigo-900/50 to-black'
-          );
-        } else {
-          // Switch back to map view
-          bgElement.className = bgElement.className.replace(
-            'from-blue-900 via-indigo-900/50 to-black',
-            'from-gray-900 via-purple-900/30 to-blue-900/30'
-          );
-        }
-      }
+    if (!isGlobeView) {
+      // Switch to satellite view for globe-like experience
+      map.setMapTypeId(window.google.maps.MapTypeId.SATELLITE);
+      map.setTilt(45);
+      if (map.getZoom() > 5) map.setZoom(3);
+    } else {
+      // Switch back to styled map
+      map.setMapTypeId(window.google.maps.MapTypeId.ROADMAP);
+      map.setTilt(0);
     }
   };
 
   const handleZoom = (direction: 'in' | 'out') => {
-    const newZoom = direction === 'in' ? Math.min(zoomLevel + 1, 10) : Math.max(zoomLevel - 1, 1);
-    setZoomLevel(newZoom);
+    if (!map) return;
     
-    // Simulate zoom effect
-    if (mapRef.current) {
-      const scaleValue = 0.8 + (newZoom * 0.1);
-      mapRef.current.style.transform = `scale(${scaleValue})`;
-      mapRef.current.style.transition = 'transform 0.3s ease';
-    }
+    const currentZoom = map.getZoom();
+    const newZoom = direction === 'in' 
+      ? Math.min(currentZoom + 2, 18) 
+      : Math.max(currentZoom - 2, 1);
+    
+    map.setZoom(newZoom);
+    setZoomLevel(newZoom);
   };
 
   const focusOnEmotion = (emotion: string) => {
-    setSelectedEmotion(selectedEmotion === emotion ? null : emotion);
+    const newSelectedEmotion = selectedEmotion === emotion ? null : emotion;
+    setSelectedEmotion(newSelectedEmotion);
     
-    // Simulate filtering effect
-    if (mapRef.current) {
-      const emotionPoints = mapRef.current.querySelectorAll('[class*="bg-"]');
-      emotionPoints.forEach((point: any) => {
-        if (selectedEmotion === emotion) {
-          // Show only selected emotion
-          const pointColor = emotionColors[emotion as keyof typeof emotionColors];
-          if (point.className.includes(pointColor)) {
-            point.style.opacity = '1';
-            point.style.transform = 'scale(1.5)';
-          } else {
-            point.style.opacity = '0.2';
-            point.style.transform = 'scale(0.8)';
+    // If an emotion is selected, find and focus on the first location with that emotion
+    if (newSelectedEmotion && emotionData?.data && map) {
+      const emotionLocation = emotionData.data.find(item => item.emotion === newSelectedEmotion);
+      if (emotionLocation) {
+        map.setCenter({ lat: emotionLocation.lat, lng: emotionLocation.lng });
+        map.setZoom(8);
+        
+        // Highlight the specific emotion markers
+        markers.forEach(marker => {
+          const title = marker.getTitle();
+          if (title.includes(newSelectedEmotion)) {
+            marker.setAnimation(window.google.maps.Animation.BOUNCE);
+            setTimeout(() => marker.setAnimation(null), 2000);
           }
-        } else {
-          // Reset all points
-          point.style.opacity = '1';
-          point.style.transform = 'scale(1)';
-        }
-      });
+        });
+      }
+    } else if (!newSelectedEmotion && map) {
+      // Reset to global view when clearing filter
+      map.setCenter({ lat: 20, lng: 0 });
+      map.setZoom(2);
     }
   };
 
