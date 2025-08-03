@@ -4,6 +4,8 @@ com/echo/repository/UserRepository.class
 com/echo/controller/HomeController.class
 com/echo/config/SecurityConfig.class
 com/echo/controller/AuthController$RegisterRequest.class
+com/echo/service/AudioProcessingService.class
+com/echo/service/AudioProcessingService$EmotionAnalysisResult.class
 com/echo/controller/MemoryController$CreateMemoryRequest.class
 com/echo/model/User.class
 com/echo/repository/MemoryRepository.class
