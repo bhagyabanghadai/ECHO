@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .recording {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Navigation -->
+    <nav class="bg-black bg-opacity-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-2xl font-bold text-purple-400">ECHO</div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-300">Welcome, <span th:text="${user.username}">User</span></span>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+                Your Emotional Journey
+            </h1>
+            <p class="text-xl text-gray-300">Discover and share memories around you</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <div class="text-3xl font-bold text-purple-400" id="memoryCount">0</div>
+                <div class="text-gray-300">Your Memories</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <div class="text-3xl font-bold text-blue-400" id="nearbyCount">0</div>
+                <div class="text-gray-300">Nearby Memories</div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-lg text-center">
+                <div class="text-3xl font-bold text-green-400" id="emotionCount">8</div>
+                <div class="text-gray-300">Emotions Available</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col md:flex-row gap-4 mb-8">
+            <button onclick="startRecording()" id="recordBtn" class="flex-1 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                </svg>
+                <span>Record Memory</span>
+            </button>
+            <button onclick="findNearby()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span>Find Nearby</span>
+            </button>
+        </div>
+
+        <!-- Memory Lists -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Your Memories -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                    Your Memories
+                </h2>
+                <div id="userMemories" class="space-y-4">
+                    <div class="text-gray-400 text-center py-8">
+                        No memories yet. Record your first one!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nearby Memories -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Nearby Memories
+                </h2>
+                <div id="nearbyMemories" class="space-y-4">
+                    <div class="text-gray-400 text-center py-8">
+                        Enable location to discover nearby memories
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recording Modal -->
+    <div id="recordingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg w-full max-w-md mx-4">
+            <div class="text-center">
+                <h2 class="text-2xl font-bold mb-6">Record Your Memory</h2>
+                
+                <!-- Recording Controls -->
+                <div class="mb-6">
+                    <button id="micBtn" onclick="toggleRecording()" class="w-20 h-20 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center mx-auto transition-colors">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                    </button>
+                    <div id="recordingTime" class="text-lg font-mono mt-2">00:00</div>
+                </div>
+
+                <!-- Memory Form -->
+                <form id="memoryForm" onsubmit="saveMemory(event)" class="hidden">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Title</label>
+                        <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Description (optional)</label>
+                        <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-2">Detected Emotion</label>
+                        <select name="emotion" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500">
+                            <option value="joy">😊 Joy</option>
+                            <option value="nostalgia">🌅 Nostalgia</option>
+                            <option value="love">❤️ Love</option>
+                            <option value="calm">😌 Calm</option>
+                            <option value="excitement">🎉 Excitement</option>
+                            <option value="contemplative">🤔 Contemplative</option>
+                            <option value="hopeful">🌟 Hopeful</option>
+                            <option value="grateful">🙏 Grateful</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="button" onclick="closeRecordingModal()" class="flex-1 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                            Save Memory
+                        </button>
+                    </div>
+                </form>
+
+                <div class="flex space-x-4 mt-6" id="recordingControls">
+                    <button onclick="closeRecordingModal()" class="flex-1 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        let recordingStartTime = 0;
+        let recordingTimer = null;
+        let audioBlob = null;
+        let userLocation = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserMemories();
+            requestLocation();
+        });
+
+        // Request user location
+        function requestLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        loadNearbyMemories();
+                    },
+                    (error) => {
+                        console.log('Location access denied:', error);
+                    }
+                );
+            }
+        }
+
+        // Load user memories
+        async function loadUserMemories() {
+            try {
+                const response = await fetch('/api/memories/user');
+                const data = await response.json();
+                if (response.ok) {
+                    displayMemories(data.memories, 'userMemories');
+                    document.getElementById('memoryCount').textContent = data.memories.length;
+                }
+            } catch (error) {
+                console.error('Error loading user memories:', error);
+            }
+        }
+
+        // Load nearby memories
+        async function loadNearbyMemories() {
+            if (!userLocation) return;
+            
+            try {
+                const response = await fetch(`/api/memories/nearby/${userLocation.latitude}/${userLocation.longitude}`);
+                const data = await response.json();
+                if (response.ok) {
+                    displayMemories(data.memories, 'nearbyMemories');
+                    document.getElementById('nearbyCount').textContent = data.memories.length;
+                }
+            } catch (error) {
+                console.error('Error loading nearby memories:', error);
+            }
+        }
+
+        // Display memories in container
+        function displayMemories(memories, containerId) {
+            const container = document.getElementById(containerId);
+            if (memories.length === 0) {
+                container.innerHTML = '<div class="text-gray-400 text-center py-8">No memories found</div>';
+                return;
+            }
+
+            container.innerHTML = memories.map(memory => `
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-semibold">${memory.title}</h3>
+                        <span class="text-xs px-2 py-1 bg-purple-600 rounded">${memory.emotion}</span>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-2">${memory.description || memory.content}</p>
+                    <div class="text-xs text-gray-400">
+                        ${new Date(memory.createdAt).toLocaleDateString()} by ${memory.user.username}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Recording functions
+        function startRecording() {
+            document.getElementById('recordingModal').classList.remove('hidden');
+        }
+
+        function closeRecordingModal() {
+            if (isRecording) {
+                stopRecording();
+            }
+            document.getElementById('recordingModal').classList.add('hidden');
+            document.getElementById('memoryForm').classList.add('hidden');
+            document.getElementById('recordingControls').classList.remove('hidden');
+        }
+
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecordingAudio();
+            }
+        }
+
+        function startRecordingAudio() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    isRecording = true;
+                    recordingStartTime = Date.now();
+                    
+                    // Update UI
+                    document.getElementById('micBtn').classList.add('recording', 'bg-red-600');
+                    document.getElementById('micBtn').classList.remove('bg-purple-600');
+                    
+                    // Start timer
+                    recordingTimer = setInterval(updateRecordingTime, 1000);
+                    
+                    // Simulate recording (in real app, use MediaRecorder)
+                    setTimeout(() => {
+                        if (isRecording) {
+                            stopRecording();
+                        }
+                    }, 30000); // Auto-stop after 30 seconds
+                })
+                .catch(error => {
+                    alert('Could not access microphone: ' + error.message);
+                });
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            clearInterval(recordingTimer);
+            
+            // Update UI
+            document.getElementById('micBtn').classList.remove('recording', 'bg-red-600');
+            document.getElementById('micBtn').classList.add('bg-purple-600');
+            document.getElementById('recordingTime').textContent = '00:00';
+            
+            // Show form
+            document.getElementById('memoryForm').classList.remove('hidden');
+            document.getElementById('recordingControls').classList.add('hidden');
+            
+            // Simulate random emotion detection
+            const emotions = ['joy', 'nostalgia', 'love', 'calm', 'excitement', 'contemplative', 'hopeful', 'grateful'];
+            const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+            document.querySelector('[name="emotion"]').value = randomEmotion;
+        }
+
+        function updateRecordingTime() {
+            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('recordingTime').textContent = `${minutes}:${seconds}`;
+        }
+
+        // Save memory
+        async function saveMemory(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            if (!userLocation) {
+                alert('Location is required to save memories');
+                return;
+            }
+
+            const memoryData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                content: formData.get('title'), // Use title as content for now
+                emotion: formData.get('emotion'),
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                emotionConfidence: 0.8,
+                duration: 30 // Simulated duration
+            };
+
+            try {
+                const response = await fetch('/api/memories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(memoryData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Memory saved successfully!');
+                    closeRecordingModal();
+                    loadUserMemories();
+                    loadNearbyMemories();
+                } else {
+                    alert(data.error || 'Failed to save memory');
+                }
+            } catch (error) {
+                alert('Error saving memory: ' + error.message);
+            }
+        }
+
+        // Find nearby memories
+        function findNearby() {
+            if (userLocation) {
+                loadNearbyMemories();
+            } else {
+                requestLocation();
+            }
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/';
+            }
+        }
+    </script>
+</body>
+</html>

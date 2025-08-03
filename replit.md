@@ -56,7 +56,7 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-The application follows a modern Java full-stack architecture:
+The application follows a full-stack architecture with clear separation between frontend and backend concerns:
 
 ### Frontend Architecture
 - **Framework**: Thymeleaf server-side templates with Java Spring Boot
@@ -68,16 +68,12 @@ The application follows a modern Java full-stack architecture:
 - **Routing**: Server-side routing with Spring MVC controllers
 
 ### Backend Architecture
-- **Runtime**: Java 21 with Spring Boot 3.2.0 (running on port 8080)
+- **Runtime**: Java 21 with Spring Boot 3.2.0
 - **Framework**: Spring Boot with Spring MVC for REST API endpoints
 - **Database ORM**: Spring Data JPA with Hibernate for PostgreSQL
 - **Session Management**: Spring Security with session-based authentication
 - **Security**: BCrypt password encoding and Spring Security configuration
 - **Development**: Spring Boot DevTools for hot reloading
-- **Audio Processing**: Vosk speech-to-text integration with Python emotion microservice
-
-### Microservices
-- **Emotion Detection Service**: Python HTTP server on port 5001 for keyword-based emotion analysis
 
 ## Key Components
 
