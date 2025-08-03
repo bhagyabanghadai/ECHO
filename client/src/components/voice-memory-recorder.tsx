@@ -88,9 +88,26 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, [isRecording]);
+  
+  // Cleanup effect on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up all resources when component unmounts
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current = null;
+      }
+    };
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -132,9 +149,20 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       
+      // Clear the timer interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      // Stop all media tracks to release microphone
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
+      
+      // Reset media recorder reference
+      mediaRecorderRef.current = null;
     }
   };
 
@@ -217,6 +245,22 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
     setTitle("");
     setDescription("");
     setIsProcessing(false);
+    
+    // Clean up timer interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
+    // Clean up media recorder and stream
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current = null;
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
     
     if (audioRef.current) {
       audioRef.current.src = "";
