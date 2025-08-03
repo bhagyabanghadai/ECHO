@@ -111,6 +111,7 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
 
   const startRecording = async () => {
     try {
+      console.log('Starting recording...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
@@ -125,15 +126,28 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
       };
 
       mediaRecorder.onstop = () => {
+        console.log('Media recorder stopped');
         const audioBlob = new Blob(chunks, { type: 'audio/wav' });
         setAudioBlob(audioBlob);
         setAudioUrl(URL.createObjectURL(audioBlob));
         processAudioForEmotion(audioBlob);
+        
+        // Stop all media tracks to release microphone
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+        
+        // Reset media recorder reference after processing
+        setTimeout(() => {
+          mediaRecorderRef.current = null;
+        }, 100);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
+      console.log('Recording started, isRecording:', true);
     } catch (error) {
       console.error('Error starting recording:', error);
       toast({
@@ -145,7 +159,12 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    console.log('Stop recording called, isRecording:', isRecording);
+    console.log('MediaRecorder ref exists:', !!mediaRecorderRef.current);
+    console.log('MediaRecorder state:', mediaRecorderRef.current?.state);
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      console.log('Stopping media recorder...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       
@@ -155,14 +174,21 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
         intervalRef.current = null;
       }
       
-      // Stop all media tracks to release microphone
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
+      console.log('Recording stopped, isRecording set to false');
+    } else {
+      console.log('Cannot stop recording - recorder state:', mediaRecorderRef.current?.state);
+      // Force stop if we're in recording state but recorder is messed up
+      if (isRecording) {
+        setIsRecording(false);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
       }
-      
-      // Reset media recorder reference
-      mediaRecorderRef.current = null;
     }
   };
 
@@ -299,7 +325,14 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
             <div className="text-center space-y-4">
               <div className="relative">
                 <motion.button
-                  onClick={isRecording ? stopRecording : startRecording}
+                  onClick={() => {
+                    console.log('Button clicked, current isRecording:', isRecording);
+                    if (isRecording) {
+                      stopRecording();
+                    } else {
+                      startRecording();
+                    }
+                  }}
                   className={`w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl shadow-lg transition-all ${
                     isRecording 
                       ? 'bg-red-500 hover:bg-red-600' 
@@ -309,7 +342,11 @@ export function VoiceMemoryRecorder({ isOpen, onClose }: VoiceMemoryRecorderProp
                   animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
                   transition={isRecording ? { repeat: Infinity, duration: 1 } : {}}
                 >
-                  {isRecording ? <Square className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
+                  {isRecording ? <Square className="w-8 h-8" fill="white" /> : <Mic className="w-8 h-8" />}
+                  {/* Debug indicator */}
+                  <span className="absolute -bottom-8 text-xs text-black">
+                    {isRecording ? 'STOP' : 'START'}
+                  </span>
                 </motion.button>
                 
                 {isRecording && (
