@@ -1,0 +1,16 @@
+com/echo/EchoApplication.class
+com/echo/service/UserService.class
+com/echo/repository/UserRepository.class
+com/echo/controller/HomeController.class
+com/echo/config/SecurityConfig.class
+com/echo/controller/AuthController$RegisterRequest.class
+com/echo/controller/MemoryController$CreateMemoryRequest.class
+com/echo/model/User.class
+com/echo/repository/MemoryRepository.class
+com/echo/controller/MemoryController.class
+com/echo/model/Memory.class
+com/echo/controller/AuthController.class
+com/echo/controller/AuthController$LoginRequest.class
+com/echo/config/DatabaseConfig.class
+com/echo/service/MemoryService.class
+com/echo/model/MemoryUnlock.class
