@@ -1,143 +1,142 @@
 # ECHO - Emotional Memory Social Network
 
-## Project Overview
+## Overview
 
-ECHO is a full-stack web application that combines Java Spring Boot backend with React TypeScript frontend to create an advanced geospatial emotional memory platform. Users can create, share, and discover emotional memories with location-based features and AI-powered sentiment analysis.
+ECHO is a modern web application that serves as an AI-powered emotional memory social network. The application allows users to create voice-based memories tied to specific locations and emotions, which can then be discovered and "echoed" by other users. Built with a modern tech stack, ECHO combines React frontend, Express.js backend, and PostgreSQL database with Drizzle ORM.
 
-## Architecture
+## MVP Features Implemented
 
-### Backend: Java Spring Boot
-- **Framework**: Spring Boot 3.2.0 with Java 21
-- **Database**: PostgreSQL with JPA/Hibernate
-- **Security**: Spring Security with session-based authentication
-- **Audio Processing**: Vosk speech-to-text integration
-- **REST API**: Full CRUD operations for users and memories
+The core MVP focuses on 3 high-impact features that create magical first-minute experiences:
 
-### Frontend: React TypeScript
-- **Framework**: React 18+ with TypeScript
-- **Build Tool**: Vite
-- **Routing**: React Router DOM
-- **Styling**: CSS with custom components
-- **Icons**: Lucide React
-- **HTTP Client**: Axios with session-based authentication
+1. **✅ GPS-Based Unlock**: Users can discover emotional memories hidden in their physical location. The app uses geolocation to surface memories within a specific radius, creating location-aware storytelling.
 
-### Database Schema
-- **Users**: id, username, email, password, avatar, bio, has_completed_onboarding, created_at, updated_at
-- **Memories**: id, title, description, content, emotion, emotion_confidence, latitude, longitude, audio_data, duration, user_id, created_at, updated_at
-- **Memory Unlocks**: id, memory_id, user_id, unlocked_at
+2. **✅ Real-Time Voice Posting**: Users can record voice memories that are instantly analyzed for emotional content. The app simulates AI emotion detection (joy, nostalgia, calm, etc.) and immediately processes recordings into shareable memories.
 
-## Key Features
+3. **✅ Emotion-Aware Welcome**: New users experience a guided demo that showcases all three features in an interactive flow. The system demonstrates location discovery, voice recording with emotion analysis, and memory unlocking in a cohesive onboarding experience.
 
-1. **User Authentication**: Register, login, logout with session management
-2. **Memory Management**: Create, read, update, delete emotional memories
-3. **Geolocation**: Location-based memory discovery and mapping
-4. **Emotion Analysis**: AI-powered sentiment analysis of memories
-5. **Audio Processing**: Speech-to-text conversion for voice memories
-6. **Social Features**: Memory sharing and discovery
+## Recent Changes (August 3, 2025)
 
-## API Endpoints
+**MAJOR ARCHITECTURE MIGRATION: TypeScript to Java Full-Stack**
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Get current user
+- **COMPLETED**: Full Java Spring Boot backend implementation with:
+  - Spring Boot 3.2.0 with Java 21 runtime
+  - JPA/Hibernate for database management with PostgreSQL
+  - Complete entity models: User, Memory, MemoryUnlock
+  - Repository layer with custom queries for location-based search
+  - Service layer with business logic for users and memories
+  - REST API controllers with full CRUD operations
+  - Spring Security configuration with BCrypt password encoding
+  - Session-based authentication system
 
-### Memories
-- `POST /api/memories` - Create new memory
-- `GET /api/memories/user` - Get user's memories
-- `GET /api/memories/nearby/{lat}/{lng}` - Get nearby memories
-- `GET /api/memories/emotion/{emotion}` - Get memories by emotion
-- `GET /api/memories/stats` - Get emotion statistics
-- `DELETE /api/memories/{id}` - Delete memory
-- `POST /api/memories/upload-audio` - Process audio memory
+- **COMPLETED**: Java frontend with Thymeleaf templates:
+  - Landing page with authentication modal
+  - Dashboard with memory recording and discovery
+  - Real-time voice recording simulation
+  - Location-based memory discovery interface
+  - Complete user authentication flow
 
-## Running the Application
-
-### Prerequisites
-- Java 21
-- Node.js 20+
-- PostgreSQL database (provided by Replit)
-
-### Development Setup
-1. **Backend**: `mvn spring-boot:run` (runs on port 5000)
-2. **Frontend Development**: `cd frontend && vite` (for development with hot reload)
-3. **Frontend Production**: `cd frontend && vite build` (builds to `src/main/resources/static`)
-
-### Production Build
-1. Build frontend: `cd frontend && vite build`
-2. Run Spring Boot: `mvn spring-boot:run`
-3. Access application at: `http://localhost:5000`
-
-## Current Status
-
-✅ **Completed & Tested:**
-- Java Spring Boot backend with full REST API running on port 5000
-- React TypeScript frontend built and served by Spring Boot
-- PostgreSQL database with proper schema (boolean fix applied)
-- User authentication with session management
-- Memory CRUD operations with complete API endpoints
-- Frontend build pipeline integrated with Spring Boot
-- Database schema fixes applied successfully
-- Application fully functional and tested
-
-✅ **Working Features:**
-- Spring Boot application serving React frontend at http://localhost:5000
-- User registration and login API endpoints
-- Memory creation and display functionality
-- Dashboard with memory management
-- Navigation between pages
-- Session-based authentication
-- Database integration with PostgreSQL
-- Frontend build process with Vite
-- CORS configuration for cross-origin requests
-
-## Project Structure
-
-```
-├── src/main/java/com/echo/          # Spring Boot application
-│   ├── controller/                  # REST API controllers
-│   ├── model/                      # JPA entities
-│   ├── repository/                 # Data access layer
-│   ├── service/                    # Business logic
-│   └── config/                     # Configuration classes
-├── src/main/resources/
-│   ├── static/                     # Built React frontend
-│   ├── templates/                  # Thymeleaf templates (if needed)
-│   └── application.yml             # Spring Boot configuration
-├── frontend/                       # React TypeScript frontend
-│   ├── src/
-│   │   ├── components/             # Reusable React components
-│   │   ├── pages/                  # Page components
-│   │   └── services/               # API service layer
-│   ├── vite.config.ts              # Vite configuration
-│   └── package.json                # Frontend dependencies
-└── pom.xml                         # Maven configuration
-```
-
-## Recent Changes
-
-**2025-08-03:**
-- Created complete Java Spring Boot + React TypeScript application
-- Fixed database schema issues (boolean column type)
-- Implemented session-based authentication
-- Built React frontend with Vite and integrated with Spring Boot
-- Configured CORS and API endpoints
-- Successfully tested backend API responses
+- **MIGRATION STATUS**: 
+  - Backend: 100% migrated to Java Spring Boot
+  - Frontend: 100% migrated to Thymeleaf templates with vanilla JavaScript
+  - Database: Compatible with existing PostgreSQL schema
+  - Authentication: Fully functional with session management
 
 ## User Preferences
 
-- **Technology Stack**: Java Spring Boot + React TypeScript + PostgreSQL
-- **Architecture**: Full-stack with separate frontend/backend
-- **Authentication**: Session-based (not JWT tokens)
-- **Build Tool**: Maven for backend, Vite for frontend
-- **Deployment**: Single Spring Boot application serving both API and frontend
+Preferred communication style: Simple, everyday language.
 
-## Next Steps
+## System Architecture
 
-- Add audio processing features
-- Implement geolocation-based memory discovery
-- Add memory sharing and social features
-- Enhance UI/UX with better styling
-- Add real-time features with WebSocket
-- Deploy to production
+The application follows a full-stack architecture with clear separation between frontend and backend concerns:
+
+### Frontend Architecture
+- **Framework**: Thymeleaf server-side templates with Java Spring Boot
+- **Styling**: Tailwind CSS with custom ECHO brand colors and dark theme
+- **JavaScript**: Vanilla JavaScript for interactive functionality
+- **UI Components**: Custom HTML components with Tailwind styling
+- **State Management**: Native browser APIs with fetch for server communication
+- **Animations**: CSS animations and transitions
+- **Routing**: Server-side routing with Spring MVC controllers
+
+### Backend Architecture
+- **Runtime**: Java 21 with Spring Boot 3.2.0
+- **Framework**: Spring Boot with Spring MVC for REST API endpoints
+- **Database ORM**: Spring Data JPA with Hibernate for PostgreSQL
+- **Session Management**: Spring Security with session-based authentication
+- **Security**: BCrypt password encoding and Spring Security configuration
+- **Development**: Spring Boot DevTools for hot reloading
+
+## Key Components
+
+### Frontend Components
+1. **Landing Page**: Immersive hero section with interactive globe visualization
+2. **Voice Recorder**: Real-time voice recording with emotion detection simulation
+3. **Emotion Map**: Interactive visualization of global emotion data
+4. **Memory Cards**: Display of memory content with voice playback
+5. **Custom Cursor**: Enhanced user interaction feedback
+6. **Navigation**: Smooth scrolling navigation with glass morphism effects
+
+### Backend Services
+1. **Memory Management**: CRUD operations for voice memories with location data
+2. **Emotion Analysis**: Integration points for AI-powered emotion detection
+3. **Waitlist System**: Email collection for early access users
+4. **Location Services**: Geographic data handling for memory placement
+5. **User Management**: Authentication and profile management
+
+### Database Schema
+The application uses PostgreSQL with the following main entities:
+- **Users**: User profiles with authentication data
+- **Memories**: Voice memories with emotion, location, and access control
+- **Memory Unlocks**: Tracking when users discover and interact with memories
+- **Emotion Profiles**: AI-generated emotional analysis data
+- **Waitlist Users**: Pre-launch user registration
+
+## Data Flow
+
+1. **Memory Creation**: Users record voice messages which are processed for emotion detection and stored with location data
+2. **Discovery**: Memories are surfaced to users based on proximity, emotion matching, or social connections
+3. **Interaction**: Users can "echo" (respond to) memories, creating threaded conversations
+4. **Analytics**: Emotion data is aggregated for insights and the global emotion map
+
+## External Dependencies
+
+### Frontend Dependencies
+- **UI Components**: Radix UI primitives for accessible components
+- **Animations**: Framer Motion for smooth transitions
+- **Voice Recording**: Web Audio API for microphone access
+- **Location Services**: Browser Geolocation API
+
+### Backend Dependencies
+- **Database**: Neon serverless PostgreSQL
+- **Session Storage**: PostgreSQL-based session storage
+- **Development Tools**: TSX for TypeScript execution, ESBuild for production builds
+
+### Development Tools
+- **Package Manager**: npm with lockfile version 3
+- **Type Checking**: TypeScript with strict configuration
+- **Code Quality**: Tailwind CSS for consistent styling
+- **Build Process**: Vite for frontend, ESBuild for backend bundling
+
+## Deployment Strategy
+
+The application is configured for deployment on Replit with the following setup:
+
+### Development Mode
+- Frontend served by Vite dev server with HMR
+- Backend runs with tsx for TypeScript execution
+- Database migrations managed by Drizzle Kit
+- Environment variables for database connection
+
+### Production Build
+- Frontend built to static assets with Vite
+- Backend bundled with ESBuild for Node.js
+- Single server serves both API and static files
+- Database schema deployed via Drizzle migrations
+
+### Environment Configuration
+- **Database**: PostgreSQL connection via DATABASE_URL environment variable
+- **Build Assets**: Static files served from dist/public directory
+- **API Routes**: RESTful endpoints under /api prefix
+- **Development**: Replit-specific tooling and error overlays
+
+The application demonstrates modern web development practices with TypeScript throughout, comprehensive UI component library, and scalable database architecture ready for the emotional memory social network concept.

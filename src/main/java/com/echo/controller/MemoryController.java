@@ -3,13 +3,11 @@ package com.echo.controller;
 import com.echo.model.Memory;
 import com.echo.model.User;
 import com.echo.service.MemoryService;
-import com.echo.service.AudioProcessingService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -24,9 +22,6 @@ public class MemoryController {
     
     @Autowired
     private MemoryService memoryService;
-    
-    @Autowired
-    private AudioProcessingService audioProcessingService;
     
     @PostMapping
     public ResponseEntity<?> createMemory(@RequestBody @Valid CreateMemoryRequest request, HttpSession session) {
@@ -169,65 +164,6 @@ public class MemoryController {
         memoryMap.put("user", userMap);
         
         return memoryMap;
-    }
-    
-    @PostMapping("/upload-audio")
-    public ResponseEntity<?> processAudioMemory(
-            @RequestParam("audio") MultipartFile audioFile,
-            @RequestParam("title") String title,
-            @RequestParam("latitude") BigDecimal latitude,
-            @RequestParam("longitude") BigDecimal longitude,
-            @RequestParam(value = "description", required = false) String description,
-            HttpSession session) {
-        
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
-        }
-        
-        try {
-            // Process audio to get transcription and emotion
-            AudioProcessingService.EmotionAnalysisResult result = audioProcessingService.processAudio(audioFile);
-            
-            // Create memory with AI-analyzed emotion
-            Memory memory = memoryService.createMemory(
-                title,
-                result.getTranscription(),
-                result.getEmotion(),
-                latitude,
-                longitude,
-                user
-            );
-            
-            // Set additional fields
-            if (description != null && !description.trim().isEmpty()) {
-                memory.setDescription(description);
-            }
-            
-            // Store emotion confidence
-            memory.setEmotionConfidence(BigDecimal.valueOf(result.getConfidence()));
-            
-            // Save audio file as base64 if needed (for playback)
-            if (audioFile.getSize() > 0) {
-                byte[] audioBytes = audioFile.getBytes();
-                String audioBase64 = java.util.Base64.getEncoder().encodeToString(audioBytes);
-                memory.setAudioData(audioBase64);
-            }
-            
-            memoryService.saveMemory(memory);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("memory", convertMemoryToMap(memory));
-            response.put("transcription", result.getTranscription());
-            response.put("detectedEmotion", result.getEmotion());
-            response.put("confidence", result.getConfidence());
-            response.put("usedAI", result.isUsedAI());
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to process audio: " + e.getMessage()));
-        }
     }
     
     // Request DTO

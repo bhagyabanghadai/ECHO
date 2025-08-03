@@ -66,8 +66,4 @@ public class MemoryService {
     public List<Object[]> getEmotionStatistics() {
         return memoryRepository.getEmotionCounts();
     }
-    
-    public Memory saveMemory(Memory memory) {
-        return memoryRepository.save(memory);
-    }
 }

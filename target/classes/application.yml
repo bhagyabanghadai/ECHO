@@ -28,7 +28,7 @@ spring:
     suffix: .html
 
 server:
-  port: ${PORT:5000}
+  port: 8080
   servlet:
     context-path: /
   
