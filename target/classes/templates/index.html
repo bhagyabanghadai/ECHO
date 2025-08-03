@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO - Emotional Memory Social Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'echo-purple': '#6366f1',
+                        'echo-pink': '#ec4899',
+                        'echo-blue': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #ec4899, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-black text-white">
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold gradient-text">ECHO</div>
+                <button id="authButton" class="px-6 py-2 bg-echo-purple hover:bg-purple-600 rounded-full transition-colors">
+                    Get Started
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center px-6">
+        <div class="max-w-4xl text-center">
+            <h1 class="text-6xl md:text-8xl font-bold mb-6">
+                <span class="gradient-text">Discover</span><br>
+                <span class="text-white">Emotional Memories</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto">
+                ECHO transforms personal experiences into an interactive emotional landscape. 
+                Create voice memories, discover hidden stories, and connect through shared emotions.
+            </p>
+            
+            <!-- Feature Cards -->
+            <div class="grid md:grid-cols-3 gap-6 mt-16">
+                <div class="glass-effect p-6 rounded-2xl">
+                    <div class="text-4xl mb-4">🌍</div>
+                    <h3 class="text-xl font-semibold mb-2">GPS Discovery</h3>
+                    <p class="text-gray-400">Find emotional memories hidden in your physical location</p>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl">
+                    <div class="text-4xl mb-4">🎙️</div>
+                    <h3 class="text-xl font-semibold mb-2">Voice Memories</h3>
+                    <p class="text-gray-400">Record voice memories with AI emotion detection</p>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl">
+                    <div class="text-4xl mb-4">💫</div>
+                    <h3 class="text-xl font-semibold mb-2">Emotion Aware</h3>
+                    <p class="text-gray-400">Connect with others through shared emotional experiences</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50">
+        <div class="min-h-screen flex items-center justify-center p-6">
+            <div class="glass-effect p-8 rounded-2xl max-w-md w-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="authTitle" class="text-2xl font-bold">Join ECHO</h2>
+                    <button id="closeModal" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <input id="loginUsername" type="text" placeholder="Username or Email" 
+                               class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple">
+                    </div>
+                    <div>
+                        <input id="loginPassword" type="password" placeholder="Password" 
+                               class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple">
+                    </div>
+                    <button type="submit" class="w-full p-3 bg-echo-purple hover:bg-purple-600 rounded-lg font-semibold transition-colors">
+                        Sign In
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="space-y-4 hidden">
+                    <div>
+                        <input id="registerUsername" type="text" placeholder="Username" 
+                               class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple">
+                    </div>
+                    <div>
+                        <input id="registerEmail" type="email" placeholder="Email" 
+                               class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple">
+                    </div>
+                    <div>
+                        <input id="registerPassword" type="password" placeholder="Password" 
+                               class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple">
+                    </div>
+                    <button type="submit" class="w-full p-3 bg-echo-purple hover:bg-purple-600 rounded-lg font-semibold transition-colors">
+                        Create Account
+                    </button>
+                </form>
+
+                <!-- Toggle -->
+                <div class="mt-6 text-center">
+                    <button id="toggleAuth" class="text-echo-purple hover:text-purple-400">
+                        Need an account? Sign up
+                    </button>
+                </div>
+
+                <!-- Error Message -->
+                <div id="authError" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auth Modal Logic
+        const authModal = document.getElementById('authModal');
+        const authButton = document.getElementById('authButton');
+        const closeModal = document.getElementById('closeModal');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const toggleAuth = document.getElementById('toggleAuth');
+        const authTitle = document.getElementById('authTitle');
+        const authError = document.getElementById('authError');
+
+        let isLogin = true;
+
+        authButton.addEventListener('click', () => {
+            authModal.classList.remove('hidden');
+        });
+
+        closeModal.addEventListener('click', () => {
+            authModal.classList.add('hidden');
+            authError.classList.add('hidden');
+        });
+
+        toggleAuth.addEventListener('click', () => {
+            isLogin = !isLogin;
+            if (isLogin) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                authTitle.textContent = 'Welcome Back';
+                toggleAuth.textContent = 'Need an account? Sign up';
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                authTitle.textContent = 'Join ECHO';
+                toggleAuth.textContent = 'Have an account? Sign in';
+            }
+            authError.classList.add('hidden');
+        });
+
+        // Auth Functions
+        function showError(message) {
+            authError.textContent = message;
+            authError.classList.remove('hidden');
+        }
+
+        async function apiRequest(url, data) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Request failed');
+            }
+            
+            return response.json();
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const usernameOrEmail = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!usernameOrEmail || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            try {
+                await apiRequest('/api/auth/login', {
+                    usernameOrEmail,
+                    password
+                });
+                
+                window.location.href = '/dashboard';
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            if (!username || !email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                await apiRequest('/api/auth/register', {
+                    username,
+                    email,
+                    password
+                });
+                
+                window.location.href = '/dashboard';
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                authModal.classList.add('hidden');
+            }
+        });
+
+        // Close modal on backdrop click
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

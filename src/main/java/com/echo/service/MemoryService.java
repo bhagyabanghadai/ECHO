@@ -6,64 +6,94 @@ import com.echo.repository.MemoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class MemoryService {
-    
+
     @Autowired
     private MemoryRepository memoryRepository;
-    
-    public Memory createMemory(String title, String content, String emotion, 
-                              BigDecimal latitude, BigDecimal longitude, User user) {
+
+    @Autowired
+    private PythonAIService pythonAIService;
+
+    public Memory createMemory(User user, String title, String content, String audioData, 
+                              Double latitude, Double longitude, String locationName) {
+        // Get emotion analysis from Python AI service
+        String emotion = pythonAIService.analyzeEmotion(content);
+        Double emotionConfidence = pythonAIService.getEmotionConfidence(content);
+
         Memory memory = new Memory();
+        memory.setUser(user);
         memory.setTitle(title);
         memory.setContent(content);
-        memory.setEmotion(emotion);
+        memory.setAudioData(audioData);
+        memory.setEmotion(emotion != null ? emotion : "neutral");
+        memory.setEmotionConfidence(emotionConfidence != null ? emotionConfidence : 0.0);
         memory.setLatitude(latitude);
         memory.setLongitude(longitude);
-        memory.setUser(user);
-        memory.setIsActive(true);
-        
+        memory.setLocationName(locationName);
+        memory.setAccessType("public");
+        memory.setIsActive(1);
+
         return memoryRepository.save(memory);
     }
-    
+
     public Optional<Memory> findById(String id) {
         return memoryRepository.findById(id);
     }
-    
+
     public List<Memory> findByUser(User user) {
-        return memoryRepository.findByUserAndIsActiveTrue(user);
+        return memoryRepository.findByUserOrderByCreatedAtDesc(user);
     }
-    
-    public List<Memory> findAllActiveMemories() {
-        return memoryRepository.findByIsActiveTrueOrderByCreatedAtDesc();
+
+    public List<Memory> findByUserId(String userId) {
+        return memoryRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
-    
-    public List<Memory> findMemoriesByEmotion(String emotion) {
-        return memoryRepository.findByEmotionAndIsActiveTrueOrderByCreatedAtDesc(emotion);
+
+    public List<Memory> findPublicActiveMemories() {
+        return memoryRepository.findPublicActiveMemories();
     }
-    
-    public List<Memory> findMemoriesNearLocation(BigDecimal latitude, BigDecimal longitude, Double radiusKm) {
-        return memoryRepository.findMemoriesNearLocation(latitude, longitude, radiusKm);
+
+    public List<Memory> findNearbyMemories(Double latitude, Double longitude, Double radiusKm) {
+        Double radius = radiusKm != null ? radiusKm : 10.0; // Default 10km radius
+        return memoryRepository.findNearbyMemories(latitude, longitude, radius);
     }
-    
+
+    public List<Memory> findByEmotion(String emotion) {
+        return memoryRepository.findByEmotion(emotion);
+    }
+
     public Memory updateMemory(Memory memory) {
         return memoryRepository.save(memory);
     }
-    
+
     public void deleteMemory(String id) {
-        Optional<Memory> memory = memoryRepository.findById(id);
-        if (memory.isPresent()) {
-            Memory mem = memory.get();
-            mem.setIsActive(false);
-            memoryRepository.save(mem);
-        }
+        memoryRepository.deleteById(id);
     }
-    
-    public List<Object[]> getEmotionStatistics() {
-        return memoryRepository.getEmotionCounts();
+
+    public void incrementUnlockCount(Memory memory) {
+        memory.setUnlockCount(memory.getUnlockCount() + 1);
+        memoryRepository.save(memory);
+    }
+
+    public Map<String, Long> getEmotionStatistics() {
+        List<Object[]> results = memoryRepository.getEmotionStatistics();
+        Map<String, Long> emotionMap = new HashMap<>();
+        
+        for (Object[] result : results) {
+            String emotion = (String) result[0];
+            Long count = (Long) result[1];
+            emotionMap.put(emotion, count);
+        }
+        
+        return emotionMap;
+    }
+
+    public List<Memory> getAllMemories() {
+        return memoryRepository.findAll();
     }
 }

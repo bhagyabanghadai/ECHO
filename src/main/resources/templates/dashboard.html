@@ -5,12 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ECHO Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'echo-purple': '#6366f1',
+                        'echo-pink': '#ec4899',
+                        'echo-blue': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #ec4899, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .recording {
-            animation: pulse 1.5s ease-in-out infinite;
+            animation: pulse 2s infinite;
         }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -18,15 +40,16 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-black text-white">
+    
     <!-- Navigation -->
-    <nav class="bg-black bg-opacity-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="text-2xl font-bold text-purple-400">ECHO</div>
+    <nav class="fixed top-0 w-full z-50 glass-effect">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold gradient-text">ECHO</div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-gray-300">Welcome, <span th:text="${user.username}">User</span></span>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                    <span class="text-gray-300" th:text="${username}">User</span>
+                    <button id="logoutButton" class="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
                         Logout
                     </button>
                 </div>
@@ -35,349 +58,440 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
-                Your Emotional Journey
-            </h1>
-            <p class="text-xl text-gray-300">Discover and share memories around you</p>
-        </div>
-
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-gray-800 p-6 rounded-lg text-center">
-                <div class="text-3xl font-bold text-purple-400" id="memoryCount">0</div>
-                <div class="text-gray-300">Your Memories</div>
-            </div>
-            <div class="bg-gray-800 p-6 rounded-lg text-center">
-                <div class="text-3xl font-bold text-blue-400" id="nearbyCount">0</div>
-                <div class="text-gray-300">Nearby Memories</div>
-            </div>
-            <div class="bg-gray-800 p-6 rounded-lg text-center">
-                <div class="text-3xl font-bold text-green-400" id="emotionCount">8</div>
-                <div class="text-gray-300">Emotions Available</div>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-col md:flex-row gap-4 mb-8">
-            <button onclick="startRecording()" id="recordBtn" class="flex-1 py-4 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                </svg>
-                <span>Record Memory</span>
-            </button>
-            <button onclick="findNearby()" class="flex-1 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                <span>Find Nearby</span>
-            </button>
-        </div>
-
-        <!-- Memory Lists -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Your Memories -->
-            <div class="bg-gray-800 p-6 rounded-lg">
-                <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                    </svg>
-                    Your Memories
-                </h2>
-                <div id="userMemories" class="space-y-4">
-                    <div class="text-gray-400 text-center py-8">
-                        No memories yet. Record your first one!
-                    </div>
-                </div>
+    <div class="pt-20 min-h-screen">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            
+            <!-- Welcome Section -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold mb-4">
+                    <span class="gradient-text">Discover</span> & <span class="gradient-text">Create</span>
+                </h1>
+                <p class="text-xl text-gray-300">Record your emotional memories and discover stories around you</p>
             </div>
 
-            <!-- Nearby Memories -->
-            <div class="bg-gray-800 p-6 rounded-lg">
-                <h2 class="text-xl font-semibold mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Nearby Memories
-                </h2>
-                <div id="nearbyMemories" class="space-y-4">
-                    <div class="text-gray-400 text-center py-8">
-                        Enable location to discover nearby memories
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recording Modal -->
-    <div id="recordingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-gray-800 p-8 rounded-lg w-full max-w-md mx-4">
-            <div class="text-center">
-                <h2 class="text-2xl font-bold mb-6">Record Your Memory</h2>
+            <!-- Main Grid -->
+            <div class="grid lg:grid-cols-2 gap-8">
                 
-                <!-- Recording Controls -->
-                <div class="mb-6">
-                    <button id="micBtn" onclick="toggleRecording()" class="w-20 h-20 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center mx-auto transition-colors">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                        </svg>
-                    </button>
-                    <div id="recordingTime" class="text-lg font-mono mt-2">00:00</div>
-                </div>
+                <!-- Voice Recorder Section -->
+                <div class="glass-effect p-8 rounded-2xl">
+                    <h2 class="text-2xl font-semibold mb-6 text-center">🎙️ Record a Memory</h2>
+                    
+                    <!-- Location Display -->
+                    <div class="mb-6 p-4 bg-white/5 rounded-lg">
+                        <div class="text-sm text-gray-400 mb-1">Current Location</div>
+                        <div id="locationDisplay" class="text-white">📍 Getting location...</div>
+                    </div>
 
-                <!-- Memory Form -->
-                <form id="memoryForm" onsubmit="saveMemory(event)" class="hidden">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-2">Title</label>
-                        <input type="text" name="title" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium mb-2">Description (optional)</label>
-                        <textarea name="description" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500"></textarea>
-                    </div>
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium mb-2">Detected Emotion</label>
-                        <select name="emotion" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500">
-                            <option value="joy">😊 Joy</option>
-                            <option value="nostalgia">🌅 Nostalgia</option>
-                            <option value="love">❤️ Love</option>
-                            <option value="calm">😌 Calm</option>
-                            <option value="excitement">🎉 Excitement</option>
-                            <option value="contemplative">🤔 Contemplative</option>
-                            <option value="hopeful">🌟 Hopeful</option>
-                            <option value="grateful">🙏 Grateful</option>
-                        </select>
-                    </div>
-                    <div class="flex space-x-4">
-                        <button type="button" onclick="closeRecordingModal()" class="flex-1 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
-                            Cancel
+                    <!-- Voice Recorder -->
+                    <div class="text-center mb-6">
+                        <button id="recordButton" class="w-24 h-24 bg-echo-purple hover:bg-purple-600 rounded-full flex items-center justify-center text-3xl transition-all duration-300 mx-auto">
+                            🎤
                         </button>
-                        <button type="submit" class="flex-1 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                        <div id="recordingStatus" class="mt-4 text-lg text-gray-300">Press to record</div>
+                        <div id="recordingTimer" class="text-sm text-gray-400 hidden">00:00</div>
+                    </div>
+
+                    <!-- Memory Form -->
+                    <form id="memoryForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Memory Title</label>
+                            <input id="memoryTitle" type="text" placeholder="Give your memory a title..." 
+                                   class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Description (Optional)</label>
+                            <textarea id="memoryContent" rows="3" placeholder="Describe your memory..." 
+                                      class="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-echo-purple resize-none"></textarea>
+                        </div>
+                        
+                        <!-- Emotion Display -->
+                        <div id="emotionDisplay" class="hidden p-4 bg-echo-purple/20 border border-echo-purple/30 rounded-lg">
+                            <div class="text-sm text-gray-300 mb-1">Detected Emotion</div>
+                            <div id="emotionResult" class="text-lg font-semibold"></div>
+                            <div id="emotionConfidence" class="text-sm text-gray-400"></div>
+                        </div>
+
+                        <button type="submit" id="saveMemory" class="w-full p-3 bg-echo-pink hover:bg-pink-600 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                             Save Memory
                         </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
 
-                <div class="flex space-x-4 mt-6" id="recordingControls">
-                    <button onclick="closeRecordingModal()" class="flex-1 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
-                        Cancel
+                <!-- Discovery Section -->
+                <div class="glass-effect p-8 rounded-2xl">
+                    <h2 class="text-2xl font-semibold mb-6 text-center">🌍 Nearby Memories</h2>
+                    
+                    <!-- Emotion Map -->
+                    <div class="mb-6 p-4 bg-white/5 rounded-lg">
+                        <div class="text-sm text-gray-400 mb-3">Global Emotions</div>
+                        <div id="emotionMap" class="flex flex-wrap gap-2">
+                            <!-- Emotion bubbles will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- Memory List -->
+                    <div id="nearbyMemories" class="space-y-4 max-h-96 overflow-y-auto">
+                        <div class="text-center text-gray-400 py-8">
+                            🔍 Searching for memories near you...
+                        </div>
+                    </div>
+
+                    <!-- Refresh Button -->
+                    <button id="refreshMemories" class="w-full mt-6 p-3 bg-echo-blue hover:bg-blue-600 rounded-lg font-semibold transition-colors">
+                        🔄 Refresh Discovery
                     </button>
+                </div>
+            </div>
+
+            <!-- Your Memories Section -->
+            <div class="mt-12 glass-effect p-8 rounded-2xl">
+                <h2 class="text-2xl font-semibold mb-6">📚 Your Memories</h2>
+                <div id="userMemories" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="text-center text-gray-400 py-8 col-span-full">
+                        🌟 Your memories will appear here
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Global variables
+        let currentLocation = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
         let isRecording = false;
-        let recordingStartTime = 0;
         let recordingTimer = null;
-        let audioBlob = null;
-        let userLocation = null;
+        let recordingStart = 0;
 
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeLocation();
+            loadEmotionMap();
             loadUserMemories();
-            requestLocation();
+            setupEventListeners();
         });
 
-        // Request user location
-        function requestLocation() {
-            if (navigator.geolocation) {
+        function setupEventListeners() {
+            document.getElementById('recordButton').addEventListener('click', toggleRecording);
+            document.getElementById('memoryForm').addEventListener('submit', saveMemory);
+            document.getElementById('refreshMemories').addEventListener('click', loadNearbyMemories);
+            document.getElementById('logoutButton').addEventListener('click', logout);
+        }
+
+        // Location functions
+        async function initializeLocation() {
+            try {
+                if (!navigator.geolocation) {
+                    throw new Error('Geolocation not supported');
+                }
+
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        userLocation = {
+                        currentLocation = {
                             latitude: position.coords.latitude,
                             longitude: position.coords.longitude
                         };
+                        updateLocationDisplay();
                         loadNearbyMemories();
                     },
                     (error) => {
-                        console.log('Location access denied:', error);
+                        console.error('Location error:', error);
+                        document.getElementById('locationDisplay').textContent = '📍 Location access denied';
                     }
                 );
+            } catch (error) {
+                console.error('Location initialization error:', error);
             }
         }
 
-        // Load user memories
+        function updateLocationDisplay() {
+            if (currentLocation) {
+                const { latitude, longitude } = currentLocation;
+                document.getElementById('locationDisplay').textContent = 
+                    `📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            }
+        }
+
+        // Recording functions
+        async function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    processAudioRecording(audioBlob);
+                    
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // Update UI
+                const recordButton = document.getElementById('recordButton');
+                recordButton.classList.add('recording', 'bg-red-500');
+                recordButton.textContent = '⏸️';
+                
+                document.getElementById('recordingStatus').textContent = 'Recording...';
+                document.getElementById('recordingTimer').classList.remove('hidden');
+                
+                // Start timer
+                recordingStart = Date.now();
+                recordingTimer = setInterval(updateRecordingTimer, 100);
+
+            } catch (error) {
+                console.error('Recording error:', error);
+                alert('Could not access microphone. Please check permissions.');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                // Update UI
+                const recordButton = document.getElementById('recordButton');
+                recordButton.classList.remove('recording', 'bg-red-500');
+                recordButton.textContent = '🎤';
+                
+                document.getElementById('recordingStatus').textContent = 'Processing...';
+                document.getElementById('recordingTimer').classList.add('hidden');
+                
+                // Clear timer
+                clearInterval(recordingTimer);
+            }
+        }
+
+        function updateRecordingTimer() {
+            const elapsed = Date.now() - recordingStart;
+            const seconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const displaySeconds = seconds % 60;
+            
+            document.getElementById('recordingTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+        }
+
+        async function processAudioRecording(audioBlob) {
+            try {
+                // Convert audio to base64
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const audioData = reader.result.split(',')[1]; // Remove data URL prefix
+                    
+                    // Simulate emotion analysis for demo
+                    const content = document.getElementById('memoryContent').value || 'Voice memory recorded';
+                    await analyzeEmotion(content);
+                    
+                    // Enable save button
+                    document.getElementById('saveMemory').disabled = false;
+                    document.getElementById('recordingStatus').textContent = 'Ready to save';
+                };
+                reader.readAsDataURL(audioBlob);
+                
+            } catch (error) {
+                console.error('Audio processing error:', error);
+                document.getElementById('recordingStatus').textContent = 'Recording failed';
+            }
+        }
+
+        // Emotion analysis
+        async function analyzeEmotion(text) {
+            try {
+                const response = await fetch('/api/emotions/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) throw new Error('Analysis failed');
+
+                const result = await response.json();
+                
+                // Display emotion
+                document.getElementById('emotionResult').textContent = 
+                    `${getEmotionEmoji(result.emotion)} ${result.emotion}`;
+                document.getElementById('emotionConfidence').textContent = 
+                    `${Math.round(result.confidence * 100)}% confidence`;
+                document.getElementById('emotionDisplay').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Emotion analysis error:', error);
+            }
+        }
+
+        function getEmotionEmoji(emotion) {
+            const emojis = {
+                joy: '😊', love: '❤️', nostalgia: '🌅', calm: '🧘',
+                melancholy: '🌧️', hope: '🌈', wonder: '✨', excitement: '🎉'
+            };
+            return emojis[emotion] || '💭';
+        }
+
+        // Memory functions
+        async function saveMemory(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('memoryTitle').value;
+            const content = document.getElementById('memoryContent').value;
+
+            if (!title || !currentLocation) {
+                alert('Please provide a title and ensure location is available');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/memories/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        latitude: currentLocation.latitude,
+                        longitude: currentLocation.longitude,
+                        locationName: 'Current Location'
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to save memory');
+
+                // Reset form
+                document.getElementById('memoryForm').reset();
+                document.getElementById('emotionDisplay').classList.add('hidden');
+                document.getElementById('saveMemory').disabled = true;
+                document.getElementById('recordingStatus').textContent = 'Press to record';
+
+                // Refresh memories
+                loadUserMemories();
+                loadNearbyMemories();
+
+                alert('Memory saved successfully!');
+
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save memory');
+            }
+        }
+
         async function loadUserMemories() {
             try {
                 const response = await fetch('/api/memories/user');
+                if (!response.ok) throw new Error('Failed to load memories');
+
                 const data = await response.json();
-                if (response.ok) {
-                    displayMemories(data.memories, 'userMemories');
-                    document.getElementById('memoryCount').textContent = data.memories.length;
-                }
+                displayUserMemories(data.memories);
+
             } catch (error) {
-                console.error('Error loading user memories:', error);
+                console.error('Load user memories error:', error);
             }
         }
 
-        // Load nearby memories
         async function loadNearbyMemories() {
-            if (!userLocation) return;
-            
+            if (!currentLocation) return;
+
             try {
-                const response = await fetch(`/api/memories/nearby/${userLocation.latitude}/${userLocation.longitude}`);
+                const { latitude, longitude } = currentLocation;
+                const response = await fetch(`/api/memories/nearby/${latitude}/${longitude}`);
+                if (!response.ok) throw new Error('Failed to load nearby memories');
+
                 const data = await response.json();
-                if (response.ok) {
-                    displayMemories(data.memories, 'nearbyMemories');
-                    document.getElementById('nearbyCount').textContent = data.memories.length;
-                }
+                displayNearbyMemories(data.memories);
+
             } catch (error) {
-                console.error('Error loading nearby memories:', error);
+                console.error('Load nearby memories error:', error);
             }
         }
 
-        // Display memories in container
-        function displayMemories(memories, containerId) {
-            const container = document.getElementById(containerId);
+        async function loadEmotionMap() {
+            try {
+                const response = await fetch('/api/emotions/map');
+                if (!response.ok) throw new Error('Failed to load emotion map');
+
+                const data = await response.json();
+                displayEmotionMap(data.data);
+
+            } catch (error) {
+                console.error('Load emotion map error:', error);
+            }
+        }
+
+        // Display functions
+        function displayUserMemories(memories) {
+            const container = document.getElementById('userMemories');
+            
             if (memories.length === 0) {
-                container.innerHTML = '<div class="text-gray-400 text-center py-8">No memories found</div>';
+                container.innerHTML = '<div class="text-center text-gray-400 py-8 col-span-full">🌟 Your memories will appear here</div>';
                 return;
             }
 
             container.innerHTML = memories.map(memory => `
-                <div class="bg-gray-700 p-4 rounded-lg">
+                <div class="glass-effect p-4 rounded-lg">
                     <div class="flex justify-between items-start mb-2">
                         <h3 class="font-semibold">${memory.title}</h3>
-                        <span class="text-xs px-2 py-1 bg-purple-600 rounded">${memory.emotion}</span>
+                        <span class="text-2xl">${getEmotionEmoji(memory.emotion)}</span>
                     </div>
-                    <p class="text-gray-300 text-sm mb-2">${memory.description || memory.content}</p>
+                    <p class="text-gray-300 text-sm mb-2">${memory.content || 'Voice memory'}</p>
                     <div class="text-xs text-gray-400">
-                        ${new Date(memory.createdAt).toLocaleDateString()} by ${memory.user.username}
+                        ${new Date(memory.createdAt).toLocaleDateString()}
                     </div>
                 </div>
             `).join('');
         }
 
-        // Recording functions
-        function startRecording() {
-            document.getElementById('recordingModal').classList.remove('hidden');
-        }
-
-        function closeRecordingModal() {
-            if (isRecording) {
-                stopRecording();
-            }
-            document.getElementById('recordingModal').classList.add('hidden');
-            document.getElementById('memoryForm').classList.add('hidden');
-            document.getElementById('recordingControls').classList.remove('hidden');
-        }
-
-        function toggleRecording() {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecordingAudio();
-            }
-        }
-
-        function startRecordingAudio() {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    isRecording = true;
-                    recordingStartTime = Date.now();
-                    
-                    // Update UI
-                    document.getElementById('micBtn').classList.add('recording', 'bg-red-600');
-                    document.getElementById('micBtn').classList.remove('bg-purple-600');
-                    
-                    // Start timer
-                    recordingTimer = setInterval(updateRecordingTime, 1000);
-                    
-                    // Simulate recording (in real app, use MediaRecorder)
-                    setTimeout(() => {
-                        if (isRecording) {
-                            stopRecording();
-                        }
-                    }, 30000); // Auto-stop after 30 seconds
-                })
-                .catch(error => {
-                    alert('Could not access microphone: ' + error.message);
-                });
-        }
-
-        function stopRecording() {
-            isRecording = false;
-            clearInterval(recordingTimer);
+        function displayNearbyMemories(memories) {
+            const container = document.getElementById('nearbyMemories');
             
-            // Update UI
-            document.getElementById('micBtn').classList.remove('recording', 'bg-red-600');
-            document.getElementById('micBtn').classList.add('bg-purple-600');
-            document.getElementById('recordingTime').textContent = '00:00';
-            
-            // Show form
-            document.getElementById('memoryForm').classList.remove('hidden');
-            document.getElementById('recordingControls').classList.add('hidden');
-            
-            // Simulate random emotion detection
-            const emotions = ['joy', 'nostalgia', 'love', 'calm', 'excitement', 'contemplative', 'hopeful', 'grateful'];
-            const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
-            document.querySelector('[name="emotion"]').value = randomEmotion;
-        }
-
-        function updateRecordingTime() {
-            const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
-            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const seconds = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('recordingTime').textContent = `${minutes}:${seconds}`;
-        }
-
-        // Save memory
-        async function saveMemory(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            
-            if (!userLocation) {
-                alert('Location is required to save memories');
+            if (memories.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 py-8">🔍 No memories found nearby</div>';
                 return;
             }
 
-            const memoryData = {
-                title: formData.get('title'),
-                description: formData.get('description'),
-                content: formData.get('title'), // Use title as content for now
-                emotion: formData.get('emotion'),
-                latitude: userLocation.latitude,
-                longitude: userLocation.longitude,
-                emotionConfidence: 0.8,
-                duration: 30 // Simulated duration
-            };
-
-            try {
-                const response = await fetch('/api/memories', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(memoryData)
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    alert('Memory saved successfully!');
-                    closeRecordingModal();
-                    loadUserMemories();
-                    loadNearbyMemories();
-                } else {
-                    alert(data.error || 'Failed to save memory');
-                }
-            } catch (error) {
-                alert('Error saving memory: ' + error.message);
-            }
+            container.innerHTML = memories.map(memory => `
+                <div class="glass-effect p-4 rounded-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-semibold">${memory.title}</h3>
+                        <span class="text-2xl">${getEmotionEmoji(memory.emotion)}</span>
+                    </div>
+                    <p class="text-gray-300 text-sm mb-2">${memory.content || 'Voice memory'}</p>
+                    <div class="text-xs text-gray-400">
+                        By ${memory.user?.username || 'Anonymous'} • ${new Date(memory.createdAt).toLocaleDateString()}
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Find nearby memories
-        function findNearby() {
-            if (userLocation) {
-                loadNearbyMemories();
-            } else {
-                requestLocation();
-            }
+        function displayEmotionMap(emotions) {
+            const container = document.getElementById('emotionMap');
+            
+            container.innerHTML = emotions.map(emotion => `
+                <div class="flex items-center space-x-2 px-3 py-1 bg-white/10 rounded-full text-sm">
+                    <span>${getEmotionEmoji(emotion.emotion)}</span>
+                    <span>${emotion.emotion}</span>
+                    <span class="text-gray-400">${emotion.count}</span>
+                </div>
+            `).join('');
         }
 
-        // Logout
+        // Auth functions
         async function logout() {
             try {
                 await fetch('/api/auth/logout', { method: 'POST' });

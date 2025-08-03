@@ -3,122 +3,144 @@ package com.echo.controller;
 import com.echo.model.User;
 import com.echo.service.UserService;
 import jakarta.servlet.http.HttpSession;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
-    
+
     @Autowired
     private UserService userService;
-    
+
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody Map<String, String> request, HttpSession session) {
         try {
-            User user = userService.createUser(request.getUsername(), request.getEmail(), request.getPassword());
-            return ResponseEntity.ok(Map.of(
-                "message", "User registered successfully",
-                "user", Map.of(
-                    "id", user.getId(),
-                    "username", user.getUsername(),
-                    "email", user.getEmail()
-                )
-            ));
+            String username = request.get("username");
+            String email = request.get("email");
+            String password = request.get("password");
+
+            if (username == null || email == null || password == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Missing required fields"));
+            }
+
+            User user = userService.createUser(username, email, password);
+            
+            // Create session
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("username", user.getUsername());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("email", user.getEmail());
+            response.put("hasCompletedOnboarding", user.getHasCompletedOnboarding());
+
+            return ResponseEntity.ok(response);
+
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Registration failed"));
         }
     }
-    
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request, HttpSession session) {
-        Optional<User> userOpt = userService.findByUsername(request.getUsername());
-        
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid username or password"));
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request, HttpSession session) {
+        try {
+            String usernameOrEmail = request.get("usernameOrEmail");
+            String password = request.get("password");
+
+            if (usernameOrEmail == null || password == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Missing credentials"));
+            }
+
+            Optional<User> userOptional = userService.findByUsernameOrEmail(usernameOrEmail);
+            
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid credentials"));
+            }
+
+            User user = userOptional.get();
+            
+            if (!userService.validatePassword(user, password)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid credentials"));
+            }
+
+            // Create session
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("username", user.getUsername());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("email", user.getEmail());
+            response.put("hasCompletedOnboarding", user.getHasCompletedOnboarding());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Login failed"));
         }
-        
-        User user = userOpt.get();
-        if (!userService.checkPassword(user, request.getPassword())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid username or password"));
-        }
-        
-        // Store user in session
-        session.setAttribute("user", user);
-        
-        return ResponseEntity.ok(Map.of(
-            "message", "Login successful",
-            "user", Map.of(
-                "id", user.getId(),
-                "username", user.getUsername(),
-                "email", user.getEmail(),
-                "hasCompletedOnboarding", user.getHasCompletedOnboarding()
-            )
-        ));
     }
-    
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
         session.invalidate();
-        return ResponseEntity.ok(Map.of("message", "Logout successful"));
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
-    
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+        String userId = (String) session.getAttribute("userId");
+        
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Not authenticated"));
         }
+
+        Optional<User> userOptional = userService.findById(userId);
         
-        // Refresh user data from database
-        Optional<User> refreshedUser = userService.findById(user.getId());
-        if (refreshedUser.isEmpty()) {
-            return ResponseEntity.status(401).body(Map.of("error", "User not found"));
+        if (userOptional.isEmpty()) {
+            session.invalidate();
+            return ResponseEntity.status(401).body(Map.of("message", "User not found"));
         }
+
+        User user = userOptional.get();
         
-        User currentUser = refreshedUser.get();
-        return ResponseEntity.ok(Map.of(
-            "id", currentUser.getId(),
-            "username", currentUser.getUsername(),
-            "email", currentUser.getEmail(),
-            "hasCompletedOnboarding", currentUser.getHasCompletedOnboarding(),
-            "bio", currentUser.getBio(),
-            "avatar", currentUser.getAvatar()
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("hasCompletedOnboarding", user.getHasCompletedOnboarding());
+        response.put("avatar", user.getAvatar());
+        response.put("bio", user.getBio());
+
+        return ResponseEntity.ok(response);
     }
-    
-    // Request DTOs
-    public static class RegisterRequest {
-        private String username;
-        private String email;
-        private String password;
+
+    @PostMapping("/complete-onboarding")
+    public ResponseEntity<?> completeOnboarding(HttpSession session) {
+        String userId = (String) session.getAttribute("userId");
         
-        // Getters and setters
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "Not authenticated"));
+        }
+
+        Optional<User> userOptional = userService.findById(userId);
         
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-    }
-    
-    public static class LoginRequest {
-        private String username;
-        private String password;
-        
-        // Getters and setters
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("message", "User not found"));
+        }
+
+        User user = userOptional.get();
+        user.setHasCompletedOnboarding(1);
+        userService.updateUser(user);
+
+        return ResponseEntity.ok(Map.of("message", "Onboarding completed"));
     }
 }
