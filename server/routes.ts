@@ -4,10 +4,17 @@ import { storage } from "./storage";
 import { insertUserSchema, insertMemorySchema, insertMemoryUnlockSchema } from "@shared/schema";
 import { z } from "zod";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Session middleware
+  // Session middleware with PostgreSQL store
+  const pgStore = connectPg(session);
   app.use(session({
+    store: new pgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: false, // We already created the table
+      tableName: 'sessions'
+    }),
     secret: process.env.SESSION_SECRET || 'echo-dev-secret-key',
     resave: false,
     saveUninitialized: false,

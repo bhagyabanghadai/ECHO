@@ -8,9 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { insertUserSchema } from "@shared/schema";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLogin, useSignup } from "@/hooks/useAuth";
 import { Loader2, UserPlus, LogIn } from "lucide-react";
 
 const signupSchema = insertUserSchema.extend({
@@ -37,7 +36,8 @@ interface AuthModalProps {
 export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const loginMutation = useLogin();
+  const signupMutation = useSignup();
 
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -58,57 +58,45 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     }
   });
 
-  const signupMutation = useMutation({
-    mutationFn: async (data: SignupFormData) => {
-      const { confirmPassword, ...signupData } = data;
-      return apiRequest("POST", "/api/auth/signup", signupData);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Welcome to ECHO!",
-        description: "Your account has been created successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      onOpenChange(false);
-      signupForm.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Signup failed",
-        description: error.message || "Please try again.",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData) => {
-      return apiRequest("POST", "/api/auth/login", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Welcome back!",
-        description: "You've been logged in successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      onOpenChange(false);
-      loginForm.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Login failed", 
-        description: error.message || "Please check your credentials.",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const onSignupSubmit = (data: SignupFormData) => {
-    signupMutation.mutate(data);
+  const handleSignup = (data: SignupFormData) => {
+    const { confirmPassword, ...signupData } = data;
+    signupMutation.mutate(signupData, {
+      onSuccess: () => {
+        toast({
+          title: "Welcome to ECHO!",
+          description: "Your account has been created successfully.",
+        });
+        onOpenChange(false);
+        signupForm.reset();
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Signup failed",
+          description: error.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
-  const onLoginSubmit = (data: LoginFormData) => {
-    loginMutation.mutate(data);
+  const handleLogin = (data: LoginFormData) => {
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        toast({
+          title: "Welcome back!",
+          description: "You've been logged in successfully.",
+        });
+        onOpenChange(false);
+        loginForm.reset();
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   return (
@@ -137,7 +125,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
           
           <TabsContent value="login" className="mt-6">
             <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <FormField
                   control={loginForm.control}
                   name="email"
@@ -146,16 +134,17 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       <FormLabel className="text-gray-300">Email</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Enter your email" 
-                          type="email"
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           {...field} 
+                          type="email" 
+                          className="bg-gray-800 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Enter your email"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={loginForm.control}
                   name="password"
@@ -164,64 +153,41 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       <FormLabel className="text-gray-300">Password</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Enter your password" 
-                          type="password"
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           {...field} 
+                          type="password" 
+                          className="bg-gray-800 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Enter your password"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Signing in...
+                      Logging in...
                     </>
                   ) : (
-                    'Sign In'
+                    <>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Login
+                    </>
                   )}
                 </Button>
-                <div className="text-center mt-4">
-                  <button 
-                    type="button"
-                    className="text-sm text-gray-400 hover:text-purple-400 transition-colors"
-                    onClick={() => {
-                      // TODO: Implement forgot password functionality
-                      toast({
-                        title: "Feature Coming Soon",
-                        description: "Password reset functionality will be available soon.",
-                      });
-                    }}
-                  >
-                    Forgot your password?
-                  </button>
-                </div>
-                <div className="text-center mt-2">
-                  <p className="text-sm text-gray-400">
-                    Don't have an account?{' '}
-                    <button 
-                      type="button"
-                      className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
-                      onClick={() => setActiveTab("signup")}
-                    >
-                      Create one here
-                    </button>
-                  </p>
-                </div>
               </form>
             </Form>
           </TabsContent>
           
           <TabsContent value="signup" className="mt-6">
             <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+              <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                 <FormField
                   control={signupForm.control}
                   name="username"
@@ -230,15 +196,16 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       <FormLabel className="text-gray-300">Username</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Choose a username" 
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           {...field} 
+                          className="bg-gray-800 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Choose a username"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={signupForm.control}
                   name="email"
@@ -247,16 +214,17 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       <FormLabel className="text-gray-300">Email</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Enter your email" 
-                          type="email"
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           {...field} 
+                          type="email" 
+                          className="bg-gray-800 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Enter your email"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={signupForm.control}
                   name="password"
@@ -265,16 +233,17 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       <FormLabel className="text-gray-300">Password</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Create a password" 
-                          type="password"
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           {...field} 
+                          type="password" 
+                          className="bg-gray-800 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Create a password"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={signupForm.control}
                   name="confirmPassword"
@@ -283,37 +252,20 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       <FormLabel className="text-gray-300">Confirm Password</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Confirm your password" 
-                          type="password"
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           {...field} 
+                          type="password" 
+                          className="bg-gray-800 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Confirm your password"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={signupForm.control}
-                  name="bio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-300">Bio (Optional)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Tell us about yourself..." 
-                          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                   disabled={signupMutation.isPending}
                 >
                   {signupMutation.isPending ? (
@@ -322,38 +274,16 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
                       Creating account...
                     </>
                   ) : (
-                    'Create Account'
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Create Account
+                    </>
                   )}
                 </Button>
-                <div className="text-center mt-4">
-                  <p className="text-sm text-gray-400">
-                    Already have an account?{' '}
-                    <button 
-                      type="button"
-                      className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
-                      onClick={() => setActiveTab("login")}
-                    >
-                      Sign in here
-                    </button>
-                  </p>
-                </div>
               </form>
             </Form>
           </TabsContent>
         </Tabs>
-        
-        <div className="text-center mt-6 pt-4 border-t border-gray-700">
-          <p className="text-xs text-gray-500">
-            By creating an account, you agree to our{' '}
-            <a href="/terms" className="text-purple-400 hover:text-purple-300 transition-colors">
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" className="text-purple-400 hover:text-purple-300 transition-colors">
-              Privacy Policy
-            </a>
-          </p>
-        </div>
       </DialogContent>
     </Dialog>
   );
