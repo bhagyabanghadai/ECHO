@@ -1,0 +1,118 @@
+You are building a 2-day prototype called **GreenFarm Dashboard** to showcase a regenerative agriculture decision support platform.
+
+The goal is to deliver a full-stack web app with both frontend and backend in Replit, using Java (Spring Boot) for backend APIs and React for frontend, with a PostgreSQL database. The system should be clean, responsive, and ready to demo.
+
+====================================================
+🛠️ Tech Stack
+====================================================
+Frontend:
+- React (with Vite or CRA)
+- Tailwind CSS for styling
+- Recharts for data visualization
+
+Backend:
+- Java 17 with Spring Boot
+- REST APIs
+- Maven or Gradle as build tool
+
+Database:
+- PostgreSQL (use Replit’s PostgreSQL plugin or connect to a free service like Supabase)
+
+Hosting:
+- Frontend: Netlify or Vercel
+- Backend: Render, Railway, or Replit itself
+
+====================================================
+🌐 Core Features
+====================================================
+
+1. Authentication (Basic)
+   - Simple login with email (mocked session; no full auth service needed).
+   - Optional: JWT-based if time allows.
+
+2. Home Page
+   - Hero section tagline: "Smarter, Greener Farming with Real-Time Insights"
+   - CTA: "View My Farm Dashboard"
+   - Navbar: Home | Dashboard | About
+
+3. Farm Dashboard
+   Inputs:
+     - Farm Location (city or lat/long)
+     - Crop Type (dropdown: corn, wheat, soybean, rice)
+   Outputs (via backend API):
+     - Carbon Footprint Score (tons CO₂ per acre)
+     - Water Usage Efficiency (%)
+     - Recommendation card (text advice, e.g., "Consider cover cropping to reduce footprint")
+
+   Charts:
+     - Line chart: Carbon Footprint Over Time (last 6 months, sample data)
+     - Bar chart: Water Usage vs Rainfall (mock or real API data)
+
+   Data Flow:
+     - Frontend calls Spring Boot REST endpoint `/api/farm-data`
+     - Backend fetches from mock JSON initially, later from APIs (OpenWeatherMap, NASA POWER, USDA Soil Data)
+
+4. About Page
+   - Short description: “GreenFarm Dashboard helps farmers track sustainability metrics, reduce costs, and unlock new income streams through climate-smart farming.”
+
+====================================================
+📊 Data Integration
+====================================================
+
+Backend endpoints to implement in Spring Boot:
+- `GET /api/farm-data?location=<lat,long>&crop=<cropType>`
+   Returns JSON:
+   {
+     "carbonFootprint": "2.5 tons/acre",
+     "waterEfficiency": "78%",
+     "recommendation": "Switch to cover crops to reduce footprint by 15%",
+     "carbonData": [ { "month": "Jan", "value": 3.1 }, { "month": "Feb", "value": 2.9 }, ... ],
+     "waterData": [ { "month": "Jan", "rainfall": 25, "usage": 30 }, ... ]
+   }
+
+Use mock data first. Add placeholder functions to later fetch:
+- Weather: OpenWeatherMap API
+- Climate: NASA POWER API
+- Soil: USDA NRCS Soil Data
+
+====================================================
+🎨 Design Guidelines
+====================================================
+- Deere-like branding: Greens (#3E8914), Yellows (#F2C94C), White background
+- Use Tailwind responsive classes for mobile-friendly layout
+- Dashboard cards: Rounded corners, subtle shadows, icons
+- Charts should have tooltips and legends
+- About page with small infographic or icons
+
+====================================================
+💡 Stretch Goals (if time allows)
+====================================================
+- Add a Map View using Leaflet.js with a marker on farm location
+- Add a Carbon Credit Calculator box (mocked): "$200 potential credits this season"
+- Add ability to save farm profiles in PostgreSQL with CRUD endpoints
+
+====================================================
+✅ Deliverables
+====================================================
+- React frontend with Tailwind UI and charts
+- Spring Boot backend with REST APIs
+- PostgreSQL schema (farms, crops, sustainability_metrics)
+- Mock JSON dataset integrated
+- Clear README.md explaining setup
+- Deployment-ready frontend and backend
+
+====================================================
+🚀 Development Workflow
+====================================================
+Day 1:
+- Scaffold frontend with React + Tailwind
+- Build Dashboard page with mock data cards + charts
+- Scaffold Spring Boot backend and connect mock JSON API
+
+Day 2:
+- Connect backend to real APIs (weather, soil) or keep mocked if time is tight
+- Add PostgreSQL for persistence
+- Deploy frontend + backend
+- Polish UI and prepare demo
+
+====================================================

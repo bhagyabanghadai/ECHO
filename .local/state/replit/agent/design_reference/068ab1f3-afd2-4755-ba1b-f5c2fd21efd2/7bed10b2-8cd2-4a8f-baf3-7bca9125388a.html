@@ -1,0 +1,824 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECHO - Where Memories Sleep Until They're Echoed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'echo-dark': '#0D0D0D',
+                        'echo-nostalgia': '#6B46C1',
+                        'echo-nostalgia-light': '#8B5CF6',
+                        'echo-love': '#F472B6',
+                        'echo-love-light': '#FBBF24',
+                        'echo-peace': '#06B6D4',
+                        'echo-peace-light': '#10B981',
+                        'echo-accent': '#AA66FF',
+                        'echo-accent-pink': '#FF99AA',
+                        'echo-accent-teal': '#66FFDD'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'ripple': 'ripple 2s cubic-bezier(0, 0, 0.2, 1) infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        },
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 20px rgba(170, 102, 255, 0.3)' },
+                            '100%': { 'box-shadow': '0 0 40px rgba(170, 102, 255, 0.6)' }
+                        },
+                        ripple: {
+                            '0%': { transform: 'scale(0)', opacity: '1' },
+                            '100%': { transform: 'scale(4)', opacity: '0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(170, 102, 255, 0.6);
+            border-radius: 50%;
+            position: fixed;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .custom-cursor.hover {
+            width: 40px;
+            height: 40px;
+            border-color: rgba(170, 102, 255, 1);
+        }
+
+        .memory-pulse {
+            position: relative;
+        }
+
+        .memory-pulse::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(170, 102, 255, 0.4) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            animation: ripple 3s infinite;
+        }
+
+        .parallax-container {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .emotion-orb {
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 50%),
+                        linear-gradient(45deg, var(--orb-color-1), var(--orb-color-2));
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .emotion-orb::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+            100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        }
+
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .voice-wave .bar {
+            width: 3px;
+            background: linear-gradient(to top, #AA66FF, #FF99AA);
+            border-radius: 2px;
+            animation: wave 1.5s ease-in-out infinite;
+        }
+
+        .voice-wave .bar:nth-child(2) { animation-delay: 0.1s; }
+        .voice-wave .bar:nth-child(3) { animation-delay: 0.2s; }
+        .voice-wave .bar:nth-child(4) { animation-delay: 0.3s; }
+        .voice-wave .bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { height: 10px; }
+            50% { height: 30px; }
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-echo-dark text-white font-inter overflow-x-hidden">
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="cursor"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-morphism">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold bg-gradient-to-r from-echo-accent to-echo-accent-pink bg-clip-text text-transparent">
+                    ECHO
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="hover:text-echo-accent transition-colors">Home</a>
+                    <a href="#how-it-works" class="hover:text-echo-accent transition-colors">How It Works</a>
+                    <a href="#emotion-map" class="hover:text-echo-accent transition-colors">Emotion Map</a>
+                    <a href="#features" class="hover:text-echo-accent transition-colors">Features</a>
+                </div>
+                <button class="bg-gradient-to-r from-echo-accent to-echo-accent-pink px-6 py-2 rounded-full hover:shadow-lg hover:shadow-echo-accent/50 transition-all">
+                    Join Waitlist
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center relative parallax-container">
+        <!-- Background particles -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-echo-accent rounded-full animate-pulse-slow"></div>
+            <div class="absolute top-1/3 right-1/3 w-1 h-1 bg-echo-accent-pink rounded-full animate-pulse-slow" style="animation-delay: 1s;"></div>
+            <div class="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-echo-accent-teal rounded-full animate-pulse-slow" style="animation-delay: 2s;"></div>
+        </div>
+
+        <div class="text-center z-10">
+            <!-- 3D Globe -->
+            <div class="relative mx-auto mb-12 w-80 h-80 md:w-96 md:h-96">
+                <div class="w-full h-full emotion-orb animate-float memory-pulse cursor-pointer" 
+                     style="--orb-color-1: #6B46C1; --orb-color-2: #8B5CF6;"
+                     data-hover-element>
+                    <!-- Memory pulses on globe -->
+                    <div class="absolute top-1/4 left-1/3 w-4 h-4 bg-echo-love rounded-full animate-pulse-slow"></div>
+                    <div class="absolute bottom-1/3 right-1/4 w-3 h-3 bg-echo-peace rounded-full animate-pulse-slow" style="animation-delay: 1s;"></div>
+                    <div class="absolute top-1/2 left-1/4 w-2 h-2 bg-echo-accent-teal rounded-full animate-pulse-slow" style="animation-delay: 2s;"></div>
+                    <div class="absolute bottom-1/4 left-1/2 w-3 h-3 bg-echo-love-light rounded-full animate-pulse-slow" style="animation-delay: 0.5s;"></div>
+                </div>
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-light mb-6 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                Memories sleep until<br>they're <span class="text-echo-accent font-semibold">echoed</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-gray-400 mb-12 max-w-2xl mx-auto px-4">
+                An AI-powered emotional memory network where your voice finds those who need to hear it
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
+                <button class="bg-gradient-to-r from-echo-accent to-echo-accent-pink px-8 py-4 rounded-full text-lg font-medium hover:shadow-xl hover:shadow-echo-accent/30 transition-all animate-glow" data-hover-element>
+                    🎧 Start Echoing
+                </button>
+                <button class="border border-echo-accent text-echo-accent px-8 py-4 rounded-full text-lg font-medium hover:bg-echo-accent hover:text-white transition-all" data-hover-element>
+                    🕊️ Join the Waitlist
+                </button>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <i class="fas fa-chevron-down text-echo-accent text-xl"></i>
+        </div>
+    </section>
+
+    <!-- What is ECHO Section -->
+    <section class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <div class="inline-block p-8 emotion-orb w-32 h-32 mx-auto mb-8 animate-float" 
+                     style="--orb-color-1: #F472B6; --orb-color-2: #FBBF24;" data-hover-element>
+                    <i class="fas fa-heart text-3xl text-white mt-8"></i>
+                </div>
+                <h2 class="text-4xl md:text-6xl font-light mb-8 text-center">
+                    What is <span class="text-echo-accent">ECHO</span>?
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    A whispered memory in Tokyo finds its echo in your heart in New York. 
+                    ECHO connects souls through shared emotions, not algorithms.
+                </p>
+            </div>
+
+            <!-- Memory demonstration -->
+            <div class="max-w-4xl mx-auto">
+                <div class="glass-morphism rounded-3xl p-8 mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-echo-nostalgia to-echo-nostalgia-light rounded-full flex items-center justify-center">
+                                <i class="fas fa-microphone text-white"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-400">Sleeping memory from</p>
+                                <p class="text-echo-accent">📍 Shibuya, Tokyo</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-400">Emotion detected</p>
+                            <p class="text-echo-love">💜 Nostalgia</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-black/50 rounded-2xl p-6 mb-6">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="voice-wave">
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                            </div>
+                            <span class="text-gray-400">Voice memory playing...</span>
+                        </div>
+                        <p class="text-gray-300 italic">"I miss the way the cherry blossoms fell like snow..."</p>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button class="bg-echo-accent hover:bg-echo-accent/80 px-6 py-3 rounded-full transition-all" data-hover-element>
+                            🔓 Echo This Memory
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl md:text-6xl font-light text-center mb-16">
+                How <span class="text-echo-accent">ECHO</span> Works
+            </h2>
+
+            <!-- Step 1: Voice Post -->
+            <div class="max-w-6xl mx-auto mb-20">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-3xl font-light mb-6 text-echo-love">🎙️ Whisper Your Heart</h3>
+                        <p class="text-xl text-gray-400 mb-6">
+                            Share a voice memory with the world. Our AI understands your emotion and finds the perfect place for it to sleep.
+                        </p>
+                        <div class="glass-morphism rounded-2xl p-6">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-16 h-16 bg-gradient-to-r from-echo-love to-echo-love-light rounded-full flex items-center justify-center">
+                                    <i class="fas fa-microphone text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-white font-medium">Recording...</p>
+                                    <p class="text-gray-400 text-sm">Tap to share your emotion</p>
+                                </div>
+                            </div>
+                            <div class="voice-wave justify-center">
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                                <div class="bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="emotion-orb w-64 h-64 mx-auto animate-float" 
+                             style="--orb-color-1: #F472B6; --orb-color-2: #FBBF24;" data-hover-element>
+                            <div class="flex items-center justify-center h-full">
+                                <i class="fas fa-microphone text-4xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Memory Sleeps -->
+            <div class="max-w-6xl mx-auto mb-20">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="order-2 md:order-1 text-center">
+                        <div class="emotion-orb w-64 h-64 mx-auto animate-float memory-pulse" 
+                             style="--orb-color-1: #6B46C1; --orb-color-2: #8B5CF6;" data-hover-element>
+                            <div class="flex items-center justify-center h-full">
+                                <i class="fas fa-map-marker-alt text-4xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-1 md:order-2">
+                        <h3 class="text-3xl font-light mb-6 text-echo-nostalgia">🗺️ Memory Finds Its Place</h3>
+                        <p class="text-xl text-gray-400 mb-6">
+                            Your memory drifts to a location where someone might need to hear it. It sleeps, waiting for the right soul to unlock it.
+                        </p>
+                        <div class="glass-morphism rounded-2xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <p class="text-white font-medium">Memory Placed</p>
+                                    <p class="text-echo-nostalgia">📍 Central Park, NYC</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-400 text-sm">Status</p>
+                                    <p class="text-yellow-400">💤 Sleeping</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Unlock & Echo -->
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-3xl font-light mb-6 text-echo-peace">🔓 Someone Echoes</h3>
+                        <p class="text-xl text-gray-400 mb-6">
+                            When someone nearby feels a similar emotion, they unlock your memory. They can listen, feel, and echo back with their own voice.
+                        </p>
+                        <div class="glass-morphism rounded-2xl p-6">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-echo-peace to-echo-peace-light rounded-full flex items-center justify-center">
+                                    <i class="fas fa-unlock text-white"></i>
+                                </div>
+                                <div>
+                                    <p class="text-white font-medium">Memory Unlocked</p>
+                                    <p class="text-echo-peace text-sm">Someone echoed your emotion</p>
+                                </div>
+                            </div>
+                            <div class="bg-black/50 rounded-xl p-4">
+                                <p class="text-echo-peace italic text-sm">"I understand that feeling. Here's my echo..."</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="emotion-orb w-64 h-64 mx-auto animate-float" 
+                             style="--orb-color-1: #06B6D4; --orb-color-2: #10B981;" data-hover-element>
+                            <div class="flex items-center justify-center h-full">
+                                <i class="fas fa-heart text-4xl text-white animate-pulse"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Emotion Map -->
+    <section id="emotion-map" class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-6xl font-light mb-8">
+                    Global <span class="text-echo-accent">Emotion</span> Map
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    Explore anonymous emotions echoing around the world. Each pulse represents a shared human experience.
+                </p>
+            </div>
+
+            <!-- Interactive globe/map -->
+            <div class="max-w-4xl mx-auto">
+                <div class="relative bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 glass-morphism">
+                    <!-- World map representation -->
+                    <div class="relative h-96 overflow-hidden rounded-2xl bg-black/50">
+                        <!-- Memory pulses across the map -->
+                        <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-echo-love rounded-full animate-pulse-slow memory-pulse cursor-pointer" data-hover-element data-memory="tokyo"></div>
+                        <div class="absolute top-1/3 left-2/3 w-3 h-3 bg-echo-peace rounded-full animate-pulse-slow memory-pulse cursor-pointer" data-hover-element data-memory="london" style="animation-delay: 1s;"></div>
+                        <div class="absolute bottom-1/3 left-1/2 w-5 h-5 bg-echo-nostalgia rounded-full animate-pulse-slow memory-pulse cursor-pointer" data-hover-element data-memory="nyc" style="animation-delay: 2s;"></div>
+                        <div class="absolute top-1/2 right-1/4 w-3 h-3 bg-echo-accent-teal rounded-full animate-pulse-slow memory-pulse cursor-pointer" data-hover-element data-memory="sydney" style="animation-delay: 0.5s;"></div>
+                        <div class="absolute bottom-1/4 left-1/3 w-4 h-4 bg-echo-love-light rounded-full animate-pulse-slow memory-pulse cursor-pointer" data-hover-element data-memory="paris" style="animation-delay: 1.5s;"></div>
+
+                        <!-- Map background -->
+                        <div class="absolute inset-0 opacity-20">
+                            <!-- Simplified world map representation using CSS -->
+                            <div class="absolute top-1/4 left-1/4 w-16 h-12 border border-gray-600 rounded-lg"></div>
+                            <div class="absolute top-1/3 left-1/2 w-20 h-16 border border-gray-600 rounded-lg"></div>
+                            <div class="absolute bottom-1/3 left-1/5 w-24 h-20 border border-gray-600 rounded-lg"></div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="absolute bottom-4 left-4 glass-morphism rounded-xl p-4">
+                            <h4 class="text-sm font-medium mb-2 text-white">Live Emotions</h4>
+                            <div class="space-y-1 text-xs">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-echo-love rounded-full"></div>
+                                    <span class="text-gray-400">Love & Joy</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-echo-nostalgia rounded-full"></div>
+                                    <span class="text-gray-400">Nostalgia</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-echo-peace rounded-full"></div>
+                                    <span class="text-gray-400">Peace</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Memory tooltip (hidden by default) -->
+                        <div id="memory-tooltip" class="absolute hidden glass-morphism rounded-xl p-4 pointer-events-none z-10">
+                            <p class="text-sm text-gray-400 mb-1">Echoed in <span id="tooltip-location"></span></p>
+                            <p class="text-white font-medium" id="tooltip-emotion"></p>
+                            <p class="text-xs text-gray-400 mt-1" id="tooltip-time"></p>
+                        </div>
+                    </div>
+
+                    <!-- Map controls -->
+                    <div class="flex justify-center mt-6 gap-4">
+                        <button class="glass-morphism px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-all" data-hover-element>
+                            🌍 Rotate Globe
+                        </button>
+                        <button class="glass-morphism px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-all" data-hover-element>
+                            🔍 Zoom In
+                        </button>
+                        <button class="glass-morphism px-4 py-2 rounded-full text-sm hover:bg-white/10 transition-all" data-hover-element>
+                            ❤️ Filter by Emotion
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Features -->
+    <section id="features" class="py-20 relative">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-6xl font-light mb-8">
+                    Features That <span class="text-echo-accent">Connect</span> Souls
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    Every feature is designed to deepen emotional connections, not just digital ones.
+                </p>
+            </div>
+
+            <!-- Phone mockups with features -->
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Voice-First Interface -->
+                    <div class="text-center">
+                        <div class="relative mx-auto mb-6 w-48 h-96 bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-6 glass-morphism">
+                            <!-- Phone screen content -->
+                            <div class="bg-echo-dark rounded-2xl h-full p-4 flex flex-col">
+                                <div class="text-center mb-4">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-echo-love to-echo-love-light rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <i class="fas fa-microphone text-white"></i>
+                                    </div>
+                                    <p class="text-xs text-gray-400">Tap to record</p>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <div class="voice-wave">
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                        <div class="bar"></div>
+                                    </div>
+                                </div>
+                                <div class="text-center text-xs text-gray-400">
+                                    <p>💜 Emotion: Peaceful</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-medium mb-2 text-echo-love">🎙️ Voice-First</h3>
+                        <p class="text-gray-400 text-sm">Share emotions through voice, the most human way to connect</p>
+                    </div>
+
+                    <!-- Location-Based Unlock -->
+                    <div class="text-center">
+                        <div class="relative mx-auto mb-6 w-48 h-96 bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-6 glass-morphism">
+                            <div class="bg-echo-dark rounded-2xl h-full p-4 flex flex-col">
+                                <div class="text-center mb-4">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-echo-nostalgia to-echo-nostalgia-light rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <i class="fas fa-map-marker-alt text-white"></i>
+                                    </div>
+                                    <p class="text-xs text-gray-400">Nearby memories</p>
+                                </div>
+                                <div class="flex-1 relative bg-black/30 rounded-xl">
+                                    <div class="absolute top-1/4 left-1/3 w-2 h-2 bg-echo-peace rounded-full animate-pulse"></div>
+                                    <div class="absolute bottom-1/3 right-1/4 w-2 h-2 bg-echo-love rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+                                    <div class="absolute top-1/2 left-1/2 w-3 h-3 bg-echo-accent rounded-full border border-white animate-pulse"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-400">
+                                    <p>📍 Central Park • 3 memories</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-medium mb-2 text-echo-nostalgia">🧭 Location Magic</h3>
+                        <p class="text-gray-400 text-sm">Memories unlock when you're in the right place at the right time</p>
+                    </div>
+
+                    <!-- Emotion AI -->
+                    <div class="text-center">
+                        <div class="relative mx-auto mb-6 w-48 h-96 bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl p-6 glass-morphism">
+                            <div class="bg-echo-dark rounded-2xl h-full p-4 flex flex-col">
+                                <div class="text-center mb-4">
+                                    <div class="w-16 h-16 bg-gradient-to-r from-echo-peace to-echo-peace-light rounded-full mx-auto mb-2 flex items-center justify-center">
+                                        <i class="fas fa-brain text-white"></i>
+                                    </div>
+                                    <p class="text-xs text-gray-400">Emotion analysis</p>
+                                </div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-gray-400">💜 Nostalgia</span>
+                                        <div class="w-16 h-1 bg-gray-700 rounded-full">
+                                            <div class="w-12 h-1 bg-echo-nostalgia rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-gray-400">❤️ Love</span>
+                                        <div class="w-16 h-1 bg-gray-700 rounded-full">
+                                            <div class="w-8 h-1 bg-echo-love rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-gray-400">😌 Peace</span>
+                                        <div class="w-16 h-1 bg-gray-700 rounded-full">
+                                            <div class="w-14 h-1 bg-echo-peace rounded-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center text-xs text-gray-400">
+                                    <p>AI matched your emotions</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-medium mb-2 text-echo-peace">🧠 Emotion AI</h3>
+                        <p class="text-gray-400 text-sm">AI understands and matches emotional states across memories</p>
+                    </div>
+                </div>
+
+                <!-- Additional features grid -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
+                    <div class="glass-morphism rounded-2xl p-6 text-center" data-hover-element>
+                        <div class="w-16 h-16 bg-gradient-to-r from-echo-accent to-echo-accent-pink rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-medium mb-2">🔐 Privacy Controls</h4>
+                        <p class="text-gray-400 text-sm">Choose who can unlock your memories: Public, Friends, or Emotion-matched</p>
+                    </div>
+
+                    <div class="glass-morphism rounded-2xl p-6 text-center" data-hover-element>
+                        <div class="w-16 h-16 bg-gradient-to-r from-echo-love to-echo-love-light rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-link text-white text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-medium mb-2">🔁 Echo Chains</h4>
+                        <p class="text-gray-400 text-sm">Memories create chains of emotional responses, building deeper connections</p>
+                    </div>
+
+                    <div class="glass-morphism rounded-2xl p-6 text-center" data-hover-element>
+                        <div class="w-16 h-16 bg-gradient-to-r from-echo-peace to-echo-peace-light rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <i class="fas fa-archive text-white text-xl"></i>
+                        </div>
+                        <h4 class="text-lg font-medium mb-2">📦 Memory Vault</h4>
+                        <p class="text-gray-400 text-sm">Keep all unlocked memories safe in your personal emotional archive</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-20 relative">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <div class="relative">
+                    <!-- Background pulse effect -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-echo-accent/20 to-echo-accent-pink/20 rounded-full blur-3xl animate-pulse-slow"></div>
+                    
+                    <div class="relative z-10">
+                        <h2 class="text-4xl md:text-6xl font-light mb-8">
+                            Some memories wait for the<br>
+                            <span class="text-echo-accent">right person</span> to remember them
+                        </h2>
+                        
+                        <p class="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+                            Join the ECHO community and discover the magic of shared emotions. Your voice might be exactly what someone needs to hear.
+                        </p>
+
+                        <!-- Email signup -->
+                        <div class="max-w-md mx-auto mb-8">
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <input type="email" placeholder="Enter your email" 
+                                       class="flex-1 bg-white/5 border border-white/20 rounded-full px-6 py-4 text-white placeholder-gray-400 focus:outline-none focus:border-echo-accent transition-colors">
+                                <button class="bg-gradient-to-r from-echo-accent to-echo-accent-pink px-8 py-4 rounded-full font-medium hover:shadow-xl hover:shadow-echo-accent/30 transition-all" data-hover-element>
+                                    Join Waitlist
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <button class="bg-gradient-to-r from-echo-love to-echo-love-light px-8 py-4 rounded-full text-lg font-medium hover:shadow-xl hover:shadow-echo-love/30 transition-all" data-hover-element>
+                                🎧 Start Echoing Now
+                            </button>
+                            <button class="border border-echo-peace text-echo-peace px-8 py-4 rounded-full text-lg font-medium hover:bg-echo-peace hover:text-white transition-all" data-hover-element>
+                                📱 Download App
+                            </button>
+                        </div>
+
+                        <div class="mt-8 text-sm text-gray-500">
+                            <p>🔒 Private beta • 🎯 Limited spots • ✨ Early access perks</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="text-3xl font-bold bg-gradient-to-r from-echo-accent to-echo-accent-pink bg-clip-text text-transparent mb-2">
+                        ECHO
+                    </div>
+                    <p class="text-gray-400 text-sm">Made with emotion 💜</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center gap-8">
+                    <nav class="flex gap-6">
+                        <a href="#" class="text-gray-400 hover:text-echo-accent transition-colors text-sm">Privacy</a>
+                        <a href="#" class="text-gray-400 hover:text-echo-accent transition-colors text-sm">Terms</a>
+                        <a href="#" class="text-gray-400 hover:text-echo-accent transition-colors text-sm">Support</a>
+                        <a href="#" class="text-gray-400 hover:text-echo-accent transition-colors text-sm">Contact</a>
+                    </nav>
+
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-echo-accent/20 transition-colors" data-hover-element>
+                            <i class="fab fa-twitter text-echo-accent"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-echo-accent/20 transition-colors" data-hover-element>
+                            <i class="fab fa-instagram text-echo-accent"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-echo-accent/20 transition-colors" data-hover-element>
+                            <i class="fab fa-discord text-echo-accent"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-white/10 text-center">
+                <p class="text-gray-500 text-sm">
+                    © 2024 ECHO. All rights reserved. 
+                    <button class="text-echo-accent hover:text-echo-accent-pink transition-colors ml-4" data-hover-element>
+                        Switch to Light Mode ☀️
+                    </button>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        (function() {
+            // Custom cursor functionality
+            const cursor = document.getElementById('cursor');
+            const hoverElements = document.querySelectorAll('[data-hover-element]');
+
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    cursor.classList.add('hover');
+                });
+                
+                element.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('hover');
+                });
+            });
+
+            // Memory tooltip functionality
+            const memoryPoints = document.querySelectorAll('[data-memory]');
+            const tooltip = document.getElementById('memory-tooltip');
+            const tooltipLocation = document.getElementById('tooltip-location');
+            const tooltipEmotion = document.getElementById('tooltip-emotion');
+            const tooltipTime = document.getElementById('tooltip-time');
+
+            const memoryData = {
+                tokyo: { location: 'Tokyo, Japan', emotion: '💜 Nostalgia', time: '2 hours ago' },
+                london: { location: 'London, UK', emotion: '😌 Peace', time: '5 hours ago' },
+                nyc: { location: 'New York, USA', emotion: '❤️ Love', time: '1 hour ago' },
+                sydney: { location: 'Sydney, Australia', emotion: '✨ Joy', time: '3 hours ago' },
+                paris: { location: 'Paris, France', emotion: '💕 Warmth', time: '4 hours ago' }
+            };
+
+            memoryPoints.forEach(point => {
+                point.addEventListener('mouseenter', (e) => {
+                    const memoryKey = e.target.getAttribute('data-memory');
+                    const data = memoryData[memoryKey];
+                    
+                    if (data) {
+                        tooltipLocation.textContent = data.location;
+                        tooltipEmotion.textContent = data.emotion;
+                        tooltipTime.textContent = data.time;
+                        
+                        tooltip.style.left = e.pageX + 10 + 'px';
+                        tooltip.style.top = e.pageY - 10 + 'px';
+                        tooltip.classList.remove('hidden');
+                    }
+                });
+
+                point.addEventListener('mouseleave', () => {
+                    tooltip.classList.add('hidden');
+                });
+
+                point.addEventListener('mousemove', (e) => {
+                    tooltip.style.left = e.pageX + 10 + 'px';
+                    tooltip.style.top = e.pageY - 10 + 'px';
+                });
+            });
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Parallax scrolling effect (simple implementation)
+            window.addEventListener('scroll', () => {
+                const scrolled = window.pageYOffset;
+                const parallaxElements = document.querySelectorAll('.parallax-container');
+                
+                parallaxElements.forEach(element => {
+                    const speed = 0.5;
+                    element.style.transform = `translateY(${scrolled * speed}px)`;
+                });
+            });
+
+            // Add intersection observer for fade-in animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe sections for animations
+            document.querySelectorAll('section').forEach(section => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(section);
+            });
+
+            // Initialize first section as visible
+            document.querySelector('section').style.opacity = '1';
+            document.querySelector('section').style.transform = 'translateY(0)';
+
+            // TODO: Implement voice recording functionality
+            // TODO: Implement geolocation services
+            // TODO: Implement emotion AI processing
+            // TODO: Implement real-time memory synchronization
+            // TODO: Implement user authentication system
+            // TODO: Implement push notifications for memory unlocks
+        })();
+    </script>
+</body>
+</html>
