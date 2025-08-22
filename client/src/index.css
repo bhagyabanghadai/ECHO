@@ -1,0 +1,259 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ECHO Brand Colors in HSL format */
+  --background: hsl(240, 10%, 5%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(267, 87%, 67%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+
+  /* ECHO Emotion Colors */
+  --echo-dark: hsl(0, 0%, 5%);
+  --echo-nostalgia: hsl(258, 54%, 54%);
+  --echo-nostalgia-light: hsl(250, 72%, 64%);
+  --echo-love: hsl(330, 81%, 70%);
+  --echo-love-light: hsl(45, 93%, 58%);
+  --echo-peace: hsl(188, 95%, 42%);
+  --echo-peace-light: hsl(151, 69%, 46%);
+  --echo-accent: hsl(267, 100%, 70%);
+  --echo-accent-pink: hsl(329, 100%, 80%);
+  --echo-accent-teal: hsl(173, 100%, 70%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(267, 87%, 67%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background: var(--echo-dark);
+    color: var(--foreground);
+    overflow-x: hidden;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .custom-cursor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--echo-accent);
+    border-radius: 50%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 9999;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    opacity: 0.6;
+  }
+  
+  .custom-cursor.hover {
+    width: 40px;
+    height: 40px;
+    border-color: var(--echo-accent);
+    opacity: 1;
+  }
+
+  .memory-pulse {
+    position: relative;
+  }
+
+  .memory-pulse::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--echo-accent) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    animation: ripple 3s infinite;
+    opacity: 0.4;
+  }
+
+  .emotion-orb {
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent 50%);
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .emotion-orb::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: shimmer 3s infinite;
+  }
+
+  .voice-wave {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .voice-wave .bar {
+    width: 3px;
+    background: linear-gradient(to top, var(--echo-accent), var(--echo-accent-pink));
+    border-radius: 2px;
+    animation: wave 1.5s ease-in-out infinite;
+  }
+
+  .voice-wave .bar:nth-child(2) { animation-delay: 0.1s; }
+  .voice-wave .bar:nth-child(3) { animation-delay: 0.2s; }
+  .voice-wave .bar:nth-child(4) { animation-delay: 0.3s; }
+  .voice-wave .bar:nth-child(5) { animation-delay: 0.4s; }
+
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .gradient-text {
+    background: linear-gradient(45deg, var(--echo-accent), var(--echo-accent-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .parallax-container {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  /* Updated custom cursor for better performance */
+  .custom-cursor {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(45deg, #a855f7, #ec4899);
+    border-radius: 50%;
+    transition: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+  }
+
+  .custom-cursor.hover {
+    transform: scale(1.5) !important;
+    background: linear-gradient(45deg, #ec4899, #f59e0b);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-ripple {
+    animation: ripple 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
+  }
+
+  .animate-wave {
+    animation: wave 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 20px rgba(170, 102, 255, 0.3); }
+  100% { box-shadow: 0 0 40px rgba(170, 102, 255, 0.6); }
+}
+
+@keyframes ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+  100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+}
+
+@keyframes wave {
+  0%, 100% { height: 10px; }
+  50% { height: 30px; }
+}
+
+/* Hide scrollbar but keep functionality */
+body::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .custom-cursor {
+    display: none;
+  }
+}

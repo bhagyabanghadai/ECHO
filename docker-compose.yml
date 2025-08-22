@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: echo-postgres
+    environment:
+      POSTGRES_DB: echo_db
+      POSTGRES_USER: echo_user
+      POSTGRES_PASSWORD: echo_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - echo-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: echo-backend
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/echo_db
+      DB_USERNAME: echo_user
+      DB_PASSWORD: echo_password
+      JWT_SECRET: echo-super-secret-jwt-key-change-in-production
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - echo-network
+    restart: unless-stopped
+
+  # React Frontend (Development)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: echo-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - echo-network
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: echo-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - echo-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  echo-network:
+    driver: bridge
