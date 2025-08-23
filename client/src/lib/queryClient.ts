@@ -7,6 +7,16 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Get the API base URL from environment variables or default to relative URLs for development
+const getApiBaseUrl = () => {
+  // In production (Render), use the Railway backend URL
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_BASE_URL || 'https://your-railway-backend.railway.app';
+  }
+  // In development, use relative URLs (assumes backend is on same domain)
+  return '';
+};
+
 export async function apiRequest(
   url: string,
   options: {
@@ -15,8 +25,10 @@ export async function apiRequest(
   } = {}
 ): Promise<any> {
   const { method = "GET", body } = options;
+  const baseUrl = getApiBaseUrl();
+  const fullUrl = baseUrl + url;
   
-  const res = await fetch(url, {
+  const res = await fetch(fullUrl, {
     method,
     headers: body ? { "Content-Type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined,
@@ -33,7 +45,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const baseUrl = getApiBaseUrl();
+    const url = baseUrl + queryKey.join("/");
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
