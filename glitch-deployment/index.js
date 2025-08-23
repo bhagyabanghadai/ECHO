@@ -8,15 +8,21 @@ const app = express();
 const PORT = config.PORT || 3000;
 
 // CORS configuration
+const corsOrigins = [
+  'http://localhost:5000',
+  'http://localhost:3000',
+  /\.render\.com$/,
+  /\.railway\.app$/,
+  /\.glitch\.me$/
+];
+
+// Add specific CORS_ORIGIN if provided
+if (config.CORS_ORIGIN) {
+  corsOrigins.push(config.CORS_ORIGIN);
+}
+
 app.use(cors({
-  origin: [
-    'http://localhost:5000',
-    'http://localhost:3000',
-    'https://your-frontend-domain.render.com', // Update this with your actual frontend URL
-    /\.render\.com$/,
-    /\.railway\.app$/,
-    /\.glitch\.me$/
-  ],
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
